@@ -3959,6 +3959,31 @@
     )
   )
 
+  (symbol (lib_id "power:GND") (at 146.05 30.48 0) (unit 1)
+    (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
+    (uuid 2269ea25-1633-43c5-9c8c-3df6220ab4e1)
+    (property "Reference" "#PWR031" (at 146.05 36.83 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Value" "GND" (at 146.05 34.6131 0)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Footprint" "" (at 146.05 30.48 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Datasheet" "" (at 146.05 30.48 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (pin "1" (uuid 942e20bc-56d4-4e42-a2e8-168e573af6b8))
+    (instances
+      (project "USBCTester"
+        (path "/8a9ba22b-e32e-4058-9f6d-d23fc913e7b1"
+          (reference "#PWR031") (unit 1)
+        )
+      )
+    )
+  )
+
   (symbol (lib_id "power:GND") (at 248.92 113.03 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
     (uuid 23503260-449a-45e2-8ada-10d570288ad9)
@@ -4887,6 +4912,31 @@
     )
   )
 
+  (symbol (lib_id "power:+3V3") (at 146.05 22.86 0) (unit 1)
+    (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
+    (uuid 51852ad1-0771-43a9-9f4d-98aca31107d0)
+    (property "Reference" "#PWR033" (at 146.05 26.67 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Value" "+3V3" (at 146.05 18.7269 0)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Footprint" "" (at 146.05 22.86 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Datasheet" "" (at 146.05 22.86 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (pin "1" (uuid 0e75cc58-622c-4f91-9633-6c94a0fdf7a9))
+    (instances
+      (project "USBCTester"
+        (path "/8a9ba22b-e32e-4058-9f6d-d23fc913e7b1"
+          (reference "#PWR033") (unit 1)
+        )
+      )
+    )
+  )
+
   (symbol (lib_id "Device:R") (at 267.97 132.08 90) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
     (uuid 526bc7f4-87e0-4f30-b4c0-7c4128ba2b52)
@@ -5521,6 +5571,31 @@
       (project "USBCTester"
         (path "/8a9ba22b-e32e-4058-9f6d-d23fc913e7b1"
           (reference "#PWR0109") (unit 1)
+        )
+      )
+    )
+  )
+
+  (symbol (lib_id "power:GND") (at 157.48 30.48 0) (unit 1)
+    (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
+    (uuid 866f5a3f-25eb-4f46-88a4-cc7419a62780)
+    (property "Reference" "#PWR032" (at 157.48 36.83 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Value" "GND" (at 157.48 34.6131 0)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Footprint" "" (at 157.48 30.48 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Datasheet" "" (at 157.48 30.48 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (pin "1" (uuid 942e20bc-56d4-4e42-a2e8-168e573af6b8))
+    (instances
+      (project "USBCTester"
+        (path "/8a9ba22b-e32e-4058-9f6d-d23fc913e7b1"
+          (reference "#PWR032") (unit 1)
         )
       )
     )
@@ -6315,6 +6390,32 @@
     )
   )
 
+  (symbol (lib_id "Device:C") (at 146.05 26.67 0) (unit 1)
+    (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
+    (uuid c262eb6c-1705-4355-959b-ef380bf968d4)
+    (property "Reference" "C8" (at 148.971 25.4579 0)
+      (effects (font (size 1.27 1.27)) (justify left))
+    )
+    (property "Value" "C" (at 148.971 27.8821 0)
+      (effects (font (size 1.27 1.27)) (justify left))
+    )
+    (property "Footprint" "Capacitor_SMD:C_0603_1608Metric" (at 147.0152 30.48 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Datasheet" "~" (at 146.05 26.67 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (pin "1" (uuid d376c4b3-33a2-491e-ad26-441eb9d9cf02))
+    (pin "2" (uuid bdadd66b-43d5-46d6-9ae8-fe06c0015615))
+    (instances
+      (project "USBCTester"
+        (path "/8a9ba22b-e32e-4058-9f6d-d23fc913e7b1"
+          (reference "C8") (unit 1)
+        )
+      )
+    )
+  )
+
   (symbol (lib_id "Device:R") (at 267.97 144.78 90) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
     (uuid c283aa15-600f-432c-94c1-8201ebb1367c)
@@ -6549,6 +6650,31 @@
     )
   )
 
+  (symbol (lib_id "power:VBUS") (at 157.48 22.86 0) (unit 1)
+    (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
+    (uuid d0b20734-4705-4f0a-81cc-4fdbe25484f5)
+    (property "Reference" "#PWR034" (at 157.48 26.67 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Value" "VBUS" (at 157.48 18.7269 0)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Footprint" "" (at 157.48 22.86 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Datasheet" "" (at 157.48 22.86 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (pin "1" (uuid 459cfa3a-6a65-4823-8656-2765b4db05a5))
+    (instances
+      (project "USBCTester"
+        (path "/8a9ba22b-e32e-4058-9f6d-d23fc913e7b1"
+          (reference "#PWR034") (unit 1)
+        )
+      )
+    )
+  )
+
   (symbol (lib_id "power:VCC") (at 238.76 92.71 90) (unit 1)
     (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
     (uuid d0f86168-5660-4d45-8b4b-d13384f9fc84)
@@ -6684,6 +6810,32 @@
       (project "USBCTester"
         (path "/8a9ba22b-e32e-4058-9f6d-d23fc913e7b1"
           (reference "#PWR014") (unit 1)
+        )
+      )
+    )
+  )
+
+  (symbol (lib_id "Device:C") (at 157.48 26.67 0) (unit 1)
+    (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
+    (uuid de6efc9f-3ec4-4620-8803-a8eb4103efe5)
+    (property "Reference" "C9" (at 160.401 25.4579 0)
+      (effects (font (size 1.27 1.27)) (justify left))
+    )
+    (property "Value" "C" (at 160.401 27.8821 0)
+      (effects (font (size 1.27 1.27)) (justify left))
+    )
+    (property "Footprint" "Capacitor_SMD:C_0603_1608Metric" (at 158.4452 30.48 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Datasheet" "~" (at 157.48 26.67 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (pin "1" (uuid eed6bf4d-0066-4a17-9f4c-7291b0b6c4f1))
+    (pin "2" (uuid c5ab6baf-d34c-412e-baed-892fe05d0f64))
+    (instances
+      (project "USBCTester"
+        (path "/8a9ba22b-e32e-4058-9f6d-d23fc913e7b1"
+          (reference "C9") (unit 1)
         )
       )
     )
