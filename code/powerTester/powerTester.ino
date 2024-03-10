@@ -59,13 +59,13 @@ byte scanVoltages(){
   
   byte voltageLEDs = 0x00;
   int maxCurrent = usbpd.getMaxCurrent();
-  if (maxCurrent >= 2900){
+  if (maxCurrent >= 2850){
     voltageLEDs = voltageLEDs | 0x40;
   }
-  if (maxCurrent >= 4900){
+  if (maxCurrent >= 4750){
     voltageLEDs = voltageLEDs | 0x80;
   }
-  if (checkForSupportedVoltage(5000,0x01)){  //technically max voltage is 5.5 to comply with USB 2.0 spec, may be false negative
+  if (checkForSupportedVoltageInToleranceRange(5000,0x01,4750,5500)){  //max voltage is 5.5 to comply with USB 2.0 spec
     voltageLEDs = voltageLEDs | 0x01;
     ledState = ledState | voltageLEDs;
     sendBits(ledState,0,true,false);
@@ -91,10 +91,17 @@ byte scanVoltages(){
     sendBits(ledState,0,true,false);
   }
 
+  usbpd.setVoltage(5000); //restore default 5v voltage
+
   return voltageLEDs;
 }
 
+//check if voltage is supported within +/- 5% tolerance
 bool checkForSupportedVoltage(int targetmV,long ledsToFlash){
+  return checkForSupportedVoltageInToleranceRange(targetmV,ledsToFlash,targetmV*0.95,targetmV*1.05);
+}
+
+bool checkForSupportedVoltageInToleranceRange(int targetmV,long ledsToFlash, int minRange, int maxRange){
   digitalWrite(VBUSSwitch, LOW); //make sure voltage is not output to VBUS
   usbpd.setVoltage(targetmV);
   for(int i=0; i<5; i++){
@@ -105,10 +112,11 @@ bool checkForSupportedVoltage(int targetmV,long ledsToFlash){
   }
   delay(275);   //maximum potential delay
   int measuredVoltage = usbpd.readVoltage();
-  if (measuredVoltage>targetmV*0.95 && measuredVoltage<targetmV*1.05){  //comply with PD spec tolerance
+  if (measuredVoltage>minRange && measuredVoltage<maxRange){  //comply with PD spec tolerance
     return true;
   }
   return false;
+
 }
 
 //do a scan to demonstrate that all LEDs are functional
