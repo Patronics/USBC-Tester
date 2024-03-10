@@ -65,7 +65,7 @@ void sendBits(long ledBits, long usbBits, bool ledEnable, bool usbEnable){
     shiftOut(usbBits, i);
   }
 #else
-  for(int i=0; i<18; i++){   //shift out USB
+  for(int i=0; i<19; i++){   //shift out USB
     shiftOut(usbBits, i);
   }
 #endif
@@ -104,9 +104,8 @@ long remapLeds(long cleanMapping){
   remapped += ((cleanMapping &     0x0F00) << 4);  //usb 2
   remapped += ((cleanMapping &    0x0F000) >> 4);  // usb 3 bit 0-3
   remapped += ((cleanMapping &    0x10000) >> 9);  // usb 3 bit 4
-  remapped += ((cleanMapping &    0xE0000) >> 17); // usb 3 bit 5-7
-  remapped += ((cleanMapping &   0xF00000) >> 17); // other
-  remapped += (cleanMapping & 0x1F000000);       //status
+  remapped += ((cleanMapping &    0xFE0000) >> 17); // other and usb 3 bit 5-7
+  remapped += (cleanMapping & 0x1F000000);         //status
   return remapped;
 }
 
