@@ -145,19 +145,19 @@ void sendBits(long ledBits, long usbBits, bool ledEnable, bool usbEnable){
   ledBits = remapLeds(ledBits);
 
   for(int i=24; i<29; i++){   //shift out last few LEDs
-    shiftOut(ledBits, i);
+    shiftOutBit(ledBits, i);
   }
 #ifdef USB_SHIFT_REG_BYPASS
     for(int i=0; i<3; i++){   //shift out USB's 3 LSB only
-    shiftOut(usbBits, i);
+    shiftOutBit(usbBits, i);
   }
 #else
   for(int i=0; i<19; i++){   //shift out USB
-    shiftOut(usbBits, i);
+    shiftOutBit(usbBits, i);
   }
 #endif
   for(int i=0; i<24; i++){  //shift out most of LEDs
-    shiftOut(ledBits, i);
+    shiftOutBit(ledBits, i);
   }
 
 
@@ -196,7 +196,7 @@ long remapLeds(long cleanMapping){
   return remapped;
 }
 
-void shiftOut(long word, int chosenBit){
+void shiftOutBit(long word, int chosenBit){
   digitalWrite(shiftSRCLK, LOW);
   digitalWrite(shiftRCLK,LOW);
   digitalWrite(shiftSer, bitRead(word, chosenBit));
