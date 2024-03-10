@@ -65,31 +65,44 @@ byte scanVoltages(){
   if (maxCurrent >= 4900){
     voltageLEDs = voltageLEDs | 0x80;
   }
-  usbpd.setVoltage(5000);  //request 5 volts
-  delay(275);   //overkill delay, experiment to find needed timings
-  int measuredVoltage = usbpd.readVoltage();
-  if (measuredVoltage>4750 && measuredVoltage<5500){  //comply with USB 2.0 spec
+  if (checkForSupportedVoltage(5000,0x01)){  //technically max voltage is 5.5 to comply with USB 2.0 spec, may be false negative
     voltageLEDs = voltageLEDs | 0x01;
+    ledState = ledState | voltageLEDs;
+    sendBits(ledState,0,true,false);
   }
-  if(checkForSupportedVoltage(9000)){
+  if(checkForSupportedVoltage(9000,0x02)){
     voltageLEDs = voltageLEDs | 0x02;
+    ledState = ledState | voltageLEDs;
+    sendBits(ledState,0,true,false);
   }
-  if(checkForSupportedVoltage(12000)){
+  if(checkForSupportedVoltage(12000, 0x04)){
     voltageLEDs = voltageLEDs | 0x04;
+    ledState = ledState | voltageLEDs;
+    sendBits(ledState,0,true,false);
   }
-  if(checkForSupportedVoltage(15000)){
+  if(checkForSupportedVoltage(15000,0x08)){
     voltageLEDs = voltageLEDs | 0x08;
+    ledState = ledState | voltageLEDs;
+    sendBits(ledState,0,true,false);
   }
-  if(checkForSupportedVoltage(20000)){
+  if(checkForSupportedVoltage(20000,0x10)){
     voltageLEDs = voltageLEDs | 0x10;
+    ledState = ledState | voltageLEDs;
+    sendBits(ledState,0,true,false);
   }
 
   return voltageLEDs;
 }
 
-bool checkForSupportedVoltage(int targetmV){
+bool checkForSupportedVoltage(int targetmV,long ledsToFlash){
   digitalWrite(VBUSSwitch, LOW); //make sure voltage is not output to VBUS
   usbpd.setVoltage(targetmV);
+  for(int i=0; i<5; i++){
+    sendBits(ledState | ledsToFlash,0,true, false);
+    delay(25);
+    sendBits(ledState,0,true,false);
+    delay(25);
+  }
   delay(275);   //maximum potential delay
   int measuredVoltage = usbpd.readVoltage();
   if (measuredVoltage>targetmV*0.95 && measuredVoltage<targetmV*1.05){  //comply with PD spec tolerance
