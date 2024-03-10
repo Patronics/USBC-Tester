@@ -1,9 +1,12 @@
 //USB C Power tester
 //Patrick Leiser, March 2024
 
+
+#include <AP33772.h>
+
+
 //if U1 and U2 are unpopulated, green-wire U1 pin 14 to U2 pin 9 and define USB_SHIFT_REG_BYPASS
 #define USB_SHIFT_REG_BYPASS
-
 
 
 ////Shift register pins
@@ -13,8 +16,15 @@
 #define shiftOELEDs 20
 #define shiftOEUSB 21
 
-//misc pin definitions
+//picoPD pin definitions
 #define internalLED 25
+#define VBUSSwitch 23
+
+AP33772 usbpd; // Automatically wire to Wire0
+
+//global to persist voltages detected
+long ledState = 0x00000F00;
+
 
 void setup() {
   // put your setup code here, to run once:
@@ -23,13 +33,69 @@ void setup() {
   pinMode(shiftRCLK, OUTPUT);
   pinMode(shiftSer, OUTPUT);
   pinMode(shiftOELEDs, OUTPUT);
-  digitalWrite(shiftOELEDs, LOW);
+  pinMode(VBUSSwitch, OUTPUT);
+  digitalWrite(shiftOELEDs, HIGH);
+  digitalWrite(shiftOEUSB, HIGH);
+  digitalWrite(VBUSSwitch, LOW);  //disable high-voltage VBUS output
+  Wire.setSDA(0);
+  Wire.setSCL(1);
+  Wire.begin();
+  Serial.begin(115200);
+  scanLeds(50); //test all LEDs and give AP33772 time to initialize
+  usbpd.begin();
+  usbpd.printPDO();
+  ledState = ledState | scanVoltages();
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  scanLeds(100);
+  ledState = ledState & 0x000000FF;  //persist power state, rescan other inputs
+
+  sendBits(ledState,0,true,false);
+  delay(5); //give the LEDs time to shine before being toggled off again to update
+}
+
+byte scanVoltages(){
   
+  byte voltageLEDs = 0x00;
+  int maxCurrent = usbpd.getMaxCurrent();
+  if (maxCurrent >= 2900){
+    voltageLEDs = voltageLEDs | 0x40;
+  }
+  if (maxCurrent >= 4900){
+    voltageLEDs = voltageLEDs | 0x80;
+  }
+  usbpd.setVoltage(5000);  //request 5 volts
+  delay(275);   //overkill delay, experiment to find needed timings
+  int measuredVoltage = usbpd.readVoltage();
+  if (measuredVoltage>4750 && measuredVoltage<5500){  //comply with USB 2.0 spec
+    voltageLEDs = voltageLEDs | 0x01;
+  }
+  if(checkForSupportedVoltage(9000)){
+    voltageLEDs = voltageLEDs | 0x02;
+  }
+  if(checkForSupportedVoltage(12000)){
+    voltageLEDs = voltageLEDs | 0x04;
+  }
+  if(checkForSupportedVoltage(15000)){
+    voltageLEDs = voltageLEDs | 0x08;
+  }
+  if(checkForSupportedVoltage(20000)){
+    voltageLEDs = voltageLEDs | 0x10;
+  }
+
+  return voltageLEDs;
+}
+
+bool checkForSupportedVoltage(int targetmV){
+  digitalWrite(VBUSSwitch, LOW); //make sure voltage is not output to VBUS
+  usbpd.setVoltage(targetmV);
+  delay(275);   //maximum potential delay
+  int measuredVoltage = usbpd.readVoltage();
+  if (measuredVoltage>targetmV*0.95 && measuredVoltage<targetmV*1.05){  //comply with PD spec tolerance
+    return true;
+  }
+  return false;
 }
 
 //do a scan to demonstrate that all LEDs are functional
@@ -113,10 +179,10 @@ void shiftOut(long word, int chosenBit){
   digitalWrite(shiftSRCLK, LOW);
   digitalWrite(shiftRCLK,LOW);
   digitalWrite(shiftSer, bitRead(word, chosenBit));
-  delayMicroseconds(3); //technically only 0.2uS delay needed
+  //delayMicroseconds(1); //technically only 0.2uS delay needed
   digitalWrite(shiftSRCLK, HIGH);
-  delayMicroseconds(3);  //unnecessary except for final shift, but harmless.
+  //delayMicroseconds(1);  //unnecessary except for final shift, but harmless.
   digitalWrite(shiftRCLK, HIGH);
-  delayMicroseconds(3);
+  //delayMicroseconds(1);
 }
 
