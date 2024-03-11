@@ -9,6 +9,8 @@
 #define USB_SHIFT_REG_BYPASS
 
 
+
+
 ////Shift register pins
 #define shiftSRCLK 18
 #define shiftRCLK 15
@@ -16,7 +18,34 @@
 #define shiftOELEDs 20
 #define shiftOEUSB 21
 
-//picoPD pin definitions
+////USB C testing pins
+#define USBinVBUS 2
+#define USBinGND 6
+#define USBinDP 9
+#define USBinDN 10
+
+#define USBinCC1 32  //ADC CAPABLE
+#define USBinCC2 31  //ADC CAPABLE
+#define USBinSBU1 11
+#define USBinSBU2 3
+
+#define USBinSSTXP1 7
+#define USBinSSTXN1 8
+#define USBinSSRXP1 5
+#define USBinSSRXN1 4
+#define USBinSSTXP2 14
+#define USBinSSTXN2 17
+#define USBinSSRXP2 13
+#define USBinSSRXN2 12
+
+#define USBinSHIELD 22
+
+
+////misc I/O pins
+#define pushButton 22
+#define ADCPot 28
+
+////picoPD pin definitions
 #define internalLED 25
 #define VBUSSwitch 23
 
