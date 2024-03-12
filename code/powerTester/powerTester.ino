@@ -18,7 +18,7 @@
 #define shiftOELEDs 20
 #define shiftOEUSB 21
 
-////USB C testing pins
+////USB C testing pins - GPIO inputs
 #define USBinVBUS 2
 #define USBinGND 6
 #define USBinDP 9
@@ -40,6 +40,31 @@
 
 #define USBinSHIELD 22
 
+////USB C testing pins - Shift register outputs
+
+#define USBoutSHIELD 0x00000004;
+//TODO COMPLETE LIST
+
+////LED Outputs:
+/*
+software mapping (after calling remapLeds()):
+0x000000FF > power
+0x00000F00 > usb 2
+0x000FF000 > usb 3
+0x00F00000 > other
+0x1F000000 > status
+*/
+
+#define LED5V 0x01
+#define LED9V 0x02
+#define LED12V 0x04
+#define LED15V 0x08
+#define LED20V 0x10
+#define LEDPPS 0x20
+#define LED3A 0x40
+#define LED5A 0x80
+
+//TODO Data,other, status led pins
 
 ////misc I/O pins
 #define pushButton 22
@@ -84,38 +109,65 @@ void loop() {
   delay(5); //give the LEDs time to shine before being toggled off again to update
 }
 
+//check continuity of a specified pin
+bool checkPinConnectionFast(long outPin,int inPin,long ledPin){
+  sendBits(ledState|ledPin, 0, true, true); //test low first, and flash the led corresponding to pin under test
+  delay(5);   //give (excessive, can be reduced) time for bits to settle and LED to flash
+  if (digitalRead(inPin)){
+    Serial.print("test outPin "+String(outPin)+"connection to inPin"+String(inPin)+"failed, expected LOW, got HIGH");
+    sendBits(ledState, 0, true, false); //restore LEDs and disable output
+    return false;
+  }
+  sendBits(ledState, outPin, true, true); //test low first, and flash the led corresponding to pin under test
+  delay(5);   //give (excessive, can be reduced) time for bits to settle and LED to flash
+  if (!digitalRead(inPin)){
+    Serial.print("test outPin "+String(outPin)+"connection to inPin"+String(inPin)+"failed, expected HIGH, got LOW");
+    sendBits(ledState, 0, true, false); //restore LEDs and disable output
+    return false;
+  }
+  ledState = ledState | ledPin;
+  sendBits(ledState, 0, true, false);
+  return true;
+}
+
+//check continuity of a specified pin, AND that no other pins are shorted to it
+bool checkPinConnectionFull(long outPin, int inPin, long ledPin){
+  //stub function, unimplemented
+  return checkPinConnectionFast(outPin, inPin, ledPin);
+}
+
 byte scanVoltages(){
   
   byte voltageLEDs = 0x00;
   int maxCurrent = usbpd.getMaxCurrent();
   if (maxCurrent >= 2850){
-    voltageLEDs = voltageLEDs | 0x40;
+    voltageLEDs = voltageLEDs | LED3A;
   }
   if (maxCurrent >= 4750){
-    voltageLEDs = voltageLEDs | 0x80;
+    voltageLEDs = voltageLEDs | LED5A;
   }
-  if (checkForSupportedVoltageInToleranceRange(5000,0x01,4750,5500)){  //max voltage is 5.5 to comply with USB 2.0 spec
-    voltageLEDs = voltageLEDs | 0x01;
+  if (checkForSupportedVoltageInToleranceRange(5000,LED5V,4750,5500)){  //max voltage is 5.5 to comply with USB 2.0 spec
+    voltageLEDs = voltageLEDs | LED5V;
     ledState = ledState | voltageLEDs;
     sendBits(ledState,0,true,false);
   }
-  if(checkForSupportedVoltage(9000,0x02)){
-    voltageLEDs = voltageLEDs | 0x02;
+  if(checkForSupportedVoltage(9000,LED9V)){
+    voltageLEDs = voltageLEDs | LED9V;
     ledState = ledState | voltageLEDs;
     sendBits(ledState,0,true,false);
   }
-  if(checkForSupportedVoltage(12000, 0x04)){
-    voltageLEDs = voltageLEDs | 0x04;
+  if(checkForSupportedVoltage(12000, LED12V)){
+    voltageLEDs = voltageLEDs | LED12V;
     ledState = ledState | voltageLEDs;
     sendBits(ledState,0,true,false);
   }
-  if(checkForSupportedVoltage(15000,0x08)){
-    voltageLEDs = voltageLEDs | 0x08;
+  if(checkForSupportedVoltage(15000,LED15V)){
+    voltageLEDs = voltageLEDs | LED15V;
     ledState = ledState | voltageLEDs;
     sendBits(ledState,0,true,false);
   }
-  if(checkForSupportedVoltage(20000,0x10)){
-    voltageLEDs = voltageLEDs | 0x10;
+  if(checkForSupportedVoltage(20000,LED20V)){
+    voltageLEDs = voltageLEDs | LED20V;
     ledState = ledState | voltageLEDs;
     sendBits(ledState,0,true,false);
   }
@@ -177,7 +229,7 @@ void sendBits(long ledBits, long usbBits, bool ledEnable, bool usbEnable){
     shiftOutBit(ledBits, i);
   }
 #ifdef USB_SHIFT_REG_BYPASS
-    for(int i=0; i<3; i++){   //shift out USB's 3 LSB only
+    for(int i=0; i<3; i++){   //shift out USB's 3 LSB only (shield pin, and the CC pulldowns/pullups)
     shiftOutBit(usbBits, i);
   }
 #else
@@ -188,7 +240,6 @@ void sendBits(long ledBits, long usbBits, bool ledEnable, bool usbEnable){
   for(int i=0; i<24; i++){  //shift out most of LEDs
     shiftOutBit(ledBits, i);
   }
-
 
   digitalWrite(shiftOEUSB,!usbEnable); //OE is active low, so invert
   digitalWrite(shiftOELEDs,!ledEnable);
