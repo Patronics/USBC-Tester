@@ -60,7 +60,7 @@ software mapping (after calling remapLeds()):
 #define BRIGHTLEDMASK 0x1A000000   //to software-pwm the red LEDs to a more subtle level
 //#define BRIGHTLEDMASK 0x1FFFFFFF   //testing pwm dimming of green leds too
 
-#define BRIGHTLEDDIMFACTOR 15
+#define BRIGHTLEDDIMFACTOR 15 //how much to reduce LED intensity, or comment out to disable software dimming
 
 #define LED5V 0x01
 #define LED9V 0x02
@@ -129,12 +129,14 @@ void loop() {
   } else {
     ledState = ledState | LEDABSENT;
   }
+  #ifdef BRIGHTLEDDIMFACTOR //only run this logic if dimming enabled
   brightLedPulseCounter++;
   if (brightLedPulseCounter > BRIGHTLEDDIMFACTOR){
     brightLedPulseCounter = 0;
   } else {
     ledState = ledState & ~BRIGHTLEDMASK;
   }
+  #endif
   sendBits(ledState,0,true,false);
   delay(1); //give the LEDs time to shine before being toggled off again to update
 
