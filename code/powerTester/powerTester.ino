@@ -42,7 +42,7 @@
 
 ////USB C testing pins - Shift register outputs
 
-#define USBoutSHIELD 0x00000004;
+#define USBoutSHIELD 0x000004
 //TODO COMPLETE LIST
 
 ////LED Outputs:
@@ -65,6 +65,8 @@ software mapping (after calling remapLeds()):
 #define LED5A 0x80
 
 //TODO Data,other, status led pins
+
+#define LEDSHIELD 0x10000000
 
 ////misc I/O pins
 #define pushButton 22
@@ -104,21 +106,32 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   ledState = ledState & 0x000000FF;  //persist power state, rescan other inputs
-
+  if(checkShieldConnection()){
+    //check other pins only when shield is connected
+  }
   sendBits(ledState,0,true,false);
   delay(5); //give the LEDs time to shine before being toggled off again to update
 }
 
+bool checkShieldConnection(){
+  return checkPinConnectionFastWithUSBEnablePinSetAs(USBoutSHIELD, USBinSHIELD, LEDSHIELD, false);
+}
+
 //check continuity of a specified pin
 bool checkPinConnectionFast(long outPin,int inPin,long ledPin){
-  sendBits(ledState|ledPin, 0, true, true); //test low first, and flash the led corresponding to pin under test
+  return checkPinConnectionFastWithUSBEnablePinSetAs(outPin, inPin, ledPin, true);
+}
+
+//helper function for checkPinConnectionFast, use with usbEnable true except when testing shield pin
+bool checkPinConnectionFastWithUSBEnablePinSetAs(long outPin,int inPin,long ledPin, bool usbEnable){
+  sendBits(ledState|ledPin, 0, true, usbEnable); //test low first, and flash the led corresponding to pin under test
   delay(5);   //give (excessive, can be reduced) time for bits to settle and LED to flash
   if (digitalRead(inPin)){
     Serial.print("test outPin "+String(outPin)+"connection to inPin"+String(inPin)+"failed, expected LOW, got HIGH");
     sendBits(ledState, 0, true, false); //restore LEDs and disable output
     return false;
   }
-  sendBits(ledState, outPin, true, true); //test low first, and flash the led corresponding to pin under test
+  sendBits(ledState, outPin, true, usbEnable); //test low first, and flash the led corresponding to pin under test
   delay(5);   //give (excessive, can be reduced) time for bits to settle and LED to flash
   if (!digitalRead(inPin)){
     Serial.print("test outPin "+String(outPin)+"connection to inPin"+String(inPin)+"failed, expected HIGH, got LOW");
