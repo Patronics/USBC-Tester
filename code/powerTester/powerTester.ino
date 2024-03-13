@@ -20,6 +20,7 @@ V2: Inputs SBU2 and DP1 shorted together; outputs SSTXP2 and SSTXPN2 shorted tog
 #define shiftSRCLK 18
 #define shiftRCLK 15
 #define shiftSer 19
+//OE pins are active low
 #define shiftOELEDs 20
 #define shiftOEUSB 21
 
@@ -43,7 +44,7 @@ V2: Inputs SBU2 and DP1 shorted together; outputs SSTXP2 and SSTXPN2 shorted tog
 #define USBinSSRXP2 13
 #define USBinSSRXN2 12
 
-#define USBinSHIELD 22
+#define USBinSHIELD 16
 
 ////USB C testing pins - Shift register outputs
 
@@ -60,6 +61,12 @@ software mapping (after calling remapLeds()):
 0x1F000000 > status
 */
 
+#define LEDNONE 0x00
+#define BRIGHTLEDMASK 0x1A000000   //to software-pwm the red LEDs to a more subtle level
+//#define BRIGHTLEDMASK 0x1FFFFFFF   //testing pwm dimming of green leds too
+
+#define BRIGHTLEDDIMFACTOR 15 //how much to reduce LED intensity, or comment out to disable software dimming
+
 #define LED5V 0x01
 #define LED9V 0x02
 #define LED12V 0x04
@@ -71,7 +78,11 @@ software mapping (after calling remapLeds()):
 
 //TODO Data,other, status led pins
 
-#define LEDSHIELD 0x10000000
+#define LEDSHIELD  0x01000000
+#define LEDFLIPPED 0x02000000
+#define LEDEMARK   0x04000000
+#define LEDABSENT  0x08000000
+#define LEDCROSSED 0x10000000
 
 ////misc I/O pins
 #define pushButton 22
@@ -86,6 +97,9 @@ AP33772 usbpd; // Automatically wire to Wire0
 //global to persist voltages detected
 long ledState = 0x00000F00;
 
+//count when to enable pulses of bright leds for PWM
+int brightLedPulseCounter = 0;
+
 
 void setup() {
   // put your setup code here, to run once:
@@ -95,6 +109,10 @@ void setup() {
   pinMode(shiftSer, OUTPUT);
   pinMode(shiftOELEDs, OUTPUT);
   pinMode(VBUSSwitch, OUTPUT);
+
+  pinMode(USBinSHIELD, INPUT);
+
+
   digitalWrite(shiftOELEDs, HIGH);
   digitalWrite(shiftOEUSB, HIGH);
   digitalWrite(VBUSSwitch, LOW);  //disable high-voltage VBUS output
@@ -113,13 +131,28 @@ void loop() {
   ledState = ledState & 0x000000FF;  //persist power state, rescan other inputs
   if(checkShieldConnection()){
     //check other pins only when shield is connected
+  } else {
+    ledState = ledState | LEDABSENT;
   }
+  #ifdef BRIGHTLEDDIMFACTOR //only run this logic if dimming enabled
+  brightLedPulseCounter++;
+  if (brightLedPulseCounter > BRIGHTLEDDIMFACTOR){
+    brightLedPulseCounter = 0;
+  } else {
+    ledState = ledState & ~BRIGHTLEDMASK;
+  }
+  #endif
   sendBits(ledState,0,true,false);
-  delay(5); //give the LEDs time to shine before being toggled off again to update
+  delay(1); //give the LEDs time to shine before being toggled off again to update
+
 }
 
 bool checkShieldConnection(){
-  return checkPinConnectionFastWithUSBEnablePinSetAs(USBoutSHIELD, USBinSHIELD, LEDSHIELD, false);
+  if (checkPinConnectionFastWithUSBEnablePinSetAs(USBoutSHIELD, USBinSHIELD, LEDNONE, false)){
+    ledState = ledState | LEDSHIELD;
+    return true;
+  }
+  return false;
 }
 
 //check continuity of a specified pin
@@ -130,16 +163,16 @@ bool checkPinConnectionFast(long outPin,int inPin,long ledPin){
 //helper function for checkPinConnectionFast, use with usbEnable true except when testing shield pin
 bool checkPinConnectionFastWithUSBEnablePinSetAs(long outPin,int inPin,long ledPin, bool usbEnable){
   sendBits(ledState|ledPin, 0, true, usbEnable); //test low first, and flash the led corresponding to pin under test
-  delay(5);   //give (excessive, can be reduced) time for bits to settle and LED to flash
+  //delay(1);   //give (excessive, can be reduced) time for bits to settle and LED to flash
   if (digitalRead(inPin)){
-    Serial.print("test outPin "+String(outPin)+"connection to inPin"+String(inPin)+"failed, expected LOW, got HIGH");
+    Serial.println("test outPin "+String(outPin)+" connection to inPin "+String(inPin)+" failed, expected LOW, got HIGH");
     sendBits(ledState, 0, true, false); //restore LEDs and disable output
     return false;
   }
   sendBits(ledState, outPin, true, usbEnable); //test low first, and flash the led corresponding to pin under test
-  delay(5);   //give (excessive, can be reduced) time for bits to settle and LED to flash
+  //delay(1);   //give (excessive, can be reduced) time for bits to settle and LED to flash
   if (!digitalRead(inPin)){
-    Serial.print("test outPin "+String(outPin)+"connection to inPin"+String(inPin)+"failed, expected HIGH, got LOW");
+    Serial.println("test outPin "+String(outPin)+"connection to inPin"+String(inPin)+"failed, expected HIGH, got LOW");
     sendBits(ledState, 0, true, false); //restore LEDs and disable output
     return false;
   }
