@@ -9,7 +9,12 @@
 #define USB_SHIFT_REG_BYPASS
 
 
+/*
+Hardware version Errata:
+V1: test ports and U1, U2 unpopulated, red leds 15x brightness
+V2: Inputs SBU2 and DP1 shorted together; outputs SSTXP2 and SSTXPN2 shorted together; outputs VBUS and CC1 shorted together
 
+*/
 
 ////Shift register pins
 #define shiftSRCLK 18
