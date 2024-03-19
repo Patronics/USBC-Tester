@@ -6,16 +6,47 @@
 
 
 //if U1 and U2 are unpopulated, green-wire U1 pin 14 to U2 pin 9 and define USB_SHIFT_REG_BYPASS
-#define USB_SHIFT_REG_BYPASS
+//#define USB_SHIFT_REG_BYPASS
 
 
 /*
 Hardware version Errata:
-V1: test ports and U1, U2 unpopulated, red leds 15x brightness
-V2 DAMAGED: Inputs SBU2 and DP1 shorted together; outputs SSTXP2 and SSTXPN2 shorted together; outputs VBUS and CC1 shorted together
-V3: Outputs DP2 and CC2 and SSTXN2 and SBU1 and SBY2 and SSRXN1 and SSRXP1 shorted together; Inputs DP and DN and SBU2 shorted together
-
+ERRATABOARD = 0: perfect fully functional board
+ERRATABOARD = 1: test ports and U1, U2 unpopulated, red leds 15x brightness
+ERRATABOARD = 2 DAMAGED, test port detached: Inputs SBU2 and DP1 shorted together; outputs SSTXP2 and SSTXPN2 shorted together; outputs VBUS and CC1 shorted together
+ERRATABOARD = 3: Outputs DP2 and CC2 and SSTXN2 and SBU1 and SBY2 and SSRXN1 and SSRXP1 shorted together; Inputs DP and DN and SBU2 shorted together
 */
+
+#define ERRATABOARD 1
+
+
+#if ERRATABOARD == 0  
+  #define ERRATA_SET
+#endif
+
+#if ERRATABOARD == 1
+  #define ERRATA_SET
+  #define USB_SHIFT_REG_BYPASS
+  #define BRIGHTLEDDIMFACTOR 15
+  #define NOPINSTEST
+#endif
+
+
+#if ERRATABOARD == 2
+  #define ERRATA_SET
+  #define NOPINSTEST
+#endif
+
+
+#if ERRATABOARD == 3
+  #define ERRATA_SET
+  //optional TODO HANDLE testing some pins
+  #define NOPINSTEST
+#endif
+
+#ifndef ERRATABOARD
+  #warning "Warning, no board errata defined"
+#endif
 
 ////Shift register pins
 #define shiftSRCLK 18
@@ -66,7 +97,7 @@ software mapping (after calling remapLeds()):
 #define BRIGHTLEDMASK 0x1A000000   //to software-pwm the red LEDs to a more subtle level
 //#define BRIGHTLEDMASK 0x1FFFFFFF   //testing pwm dimming of green leds too
 
-#define BRIGHTLEDDIMFACTOR 15 //how much to reduce LED intensity, or comment out to disable software dimming
+//#define BRIGHTLEDDIMFACTOR 15 //how much to reduce LED intensity, or comment out to disable software dimming
 
 #define LED5V 0x01
 #define LED9V 0x02
