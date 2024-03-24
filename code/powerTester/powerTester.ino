@@ -219,9 +219,19 @@ bool checkPinConnectionFull(long outPin, int inPin, long ledPin){
   return checkPinConnectionFast(outPin, inPin, ledPin);
 }
 
+bool checkPPS(){
+  if(usbpd.getExistPPS()){
+    return true;
+  }
+  return false;
+}
+
 byte scanVoltages(){
   
   byte voltageLEDs = 0x00;
+  voltageLEDs = voltageLEDs | (LEDPPS * checkPPS());
+
+//TODO: Scan voltage LEDs, all enabled ones at low brightness, then higher one at a time to indicate per-voltage current limits
   int maxCurrent = usbpd.getMaxCurrent();
   if (maxCurrent >= 2850){
     voltageLEDs = voltageLEDs | LED3A;
@@ -256,6 +266,7 @@ byte scanVoltages(){
   }
 
   usbpd.setVoltage(5000); //restore default 5v voltage
+
 
   return voltageLEDs;
 }
