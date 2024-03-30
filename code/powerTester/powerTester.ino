@@ -48,10 +48,17 @@ ERRATABOARD = 3: Outputs DP2 and CC2 and SSTXN2 and SBU1 and SBY2 and SSRXN1 and
   #define ERRATA_SET
   //optional TODO HANDLE testing some pins
   //#define NOPINSTEST
+  #define PULL_UP_INPUTS
 #endif
 
 #ifndef ERRATABOARD
   #warning "Warning, no board errata defined"
+#endif
+
+#ifdef PULL_UP_INPUTS
+  #define USB_TEST_INPUT_TYPE INPUT_PULLUP
+#else
+  #define USB_TEST_INPUT_TYPE INPUT
 #endif
 
 ////Shift register pins
@@ -148,7 +155,9 @@ void setup() {
   pinMode(shiftOELEDs, OUTPUT);
   pinMode(VBUSSwitch, OUTPUT);
 
-  pinMode(USBinSHIELD, INPUT);
+
+
+  pinMode(USBinSHIELD, USB_TEST_INPUT_TYPE);
 
 
   digitalWrite(shiftOELEDs, HIGH);
@@ -204,14 +213,14 @@ bool checkPinConnectionFast(long outPin,int inPin,long ledPin){
 //helper function for checkPinConnectionFast, use with usbEnable true except when testing shield pin
 bool checkPinConnectionFastWithUSBEnablePinSetAs(long outPin,int inPin,long ledPin, bool usbEnable){
   sendBits(ledState|ledPin, 0, true, usbEnable); //test low first, and flash the led corresponding to pin under test
-  //delay(1);   //give (excessive, can be reduced) time for bits to settle and LED to flash
+  delayMicroseconds(20);   //give time for bits to settle and LED to flash
   if (digitalRead(inPin)){
     Serial.println("test outPin "+String(outPin)+" connection to inPin "+String(inPin)+" failed, expected LOW, got HIGH");
     sendBits(ledState, 0, true, false); //restore LEDs and disable output
     return false;
   }
   sendBits(ledState, outPin, true, usbEnable); //test low first, and flash the led corresponding to pin under test
-  //delay(1);   //give (excessive, can be reduced) time for bits to settle and LED to flash
+  delayMicroseconds(20);   //give time for bits to settle and LED to flash
   if (!digitalRead(inPin)){
     Serial.println("test outPin "+String(outPin)+"connection to inPin"+String(inPin)+"failed, expected HIGH, got LOW");
     sendBits(ledState, 0, true, false); //restore LEDs and disable output
