@@ -5940,7 +5940,7 @@
 		)
 		(sheetname "Root")
 		(sheetfile "USBCTester.kicad_sch")
-		(attr through_hole board_only exclude_from_bom)
+		(attr through_hole board_only exclude_from_pos_files exclude_from_bom)
 		(fp_rect
 			(start -14.224 3.81)
 			(end 21.463 19.05)
@@ -7346,7 +7346,7 @@
 		(path "/8e29ae3b-496f-4d29-94df-0dd9e5eae20d")
 		(sheetname "Root")
 		(sheetfile "USBCTester.kicad_sch")
-		(attr exclude_from_pos_files)
+		(attr exclude_from_pos_files exclude_from_bom)
 		(fp_circle
 			(center 0 0)
 			(end 3.2 0)
@@ -7899,7 +7899,7 @@
 		(path "/54dce7db-5e5b-4437-bc09-e2763d489ae3")
 		(sheetname "Root")
 		(sheetfile "USBCTester.kicad_sch")
-		(attr exclude_from_pos_files)
+		(attr exclude_from_pos_files exclude_from_bom)
 		(fp_circle
 			(center 0 0)
 			(end 3.2 0)
@@ -10915,7 +10915,7 @@
 		(path "/80fa93b7-d554-4a48-a9f8-08bb2e8f3b77")
 		(sheetname "Root")
 		(sheetfile "USBCTester.kicad_sch")
-		(attr smd)
+		(attr smd exclude_from_pos_files exclude_from_bom)
 		(fp_line
 			(start 0.8 -0.735)
 			(end -1.485 -0.735)
@@ -13567,7 +13567,7 @@
 		(path "/6153aefa-ae45-4425-beb2-78322cf1d34e")
 		(sheetname "Root")
 		(sheetfile "USBCTester.kicad_sch")
-		(attr smd)
+		(attr smd exclude_from_pos_files exclude_from_bom)
 		(fp_line
 			(start 0.8 -0.735)
 			(end -1.485 -0.735)
@@ -14613,7 +14613,7 @@
 		(path "/afce237e-1762-4e13-8ccf-d7a5a52645cc")
 		(sheetname "Root")
 		(sheetfile "USBCTester.kicad_sch")
-		(attr through_hole)
+		(attr through_hole exclude_from_pos_files exclude_from_bom)
 		(fp_line
 			(start -1.33 1.27)
 			(end -1.33 6.41)
@@ -14888,7 +14888,7 @@
 		(path "/b350ea3f-ada3-4c1a-9677-72982fa03124")
 		(sheetname "Root")
 		(sheetfile "USBCTester.kicad_sch")
-		(attr exclude_from_pos_files)
+		(attr exclude_from_pos_files exclude_from_bom)
 		(net_tie_pad_groups "1, 2, 3")
 		(fp_poly
 			(pts
@@ -15204,7 +15204,7 @@
 		(path "/2b8c0b9d-5658-4852-ab58-baf2c4250491")
 		(sheetname "Root")
 		(sheetfile "USBCTester.kicad_sch")
-		(attr through_hole)
+		(attr through_hole exclude_from_pos_files exclude_from_bom)
 		(fp_line
 			(start -1.33 1.27)
 			(end -1.33 6.41)
@@ -21907,7 +21907,7 @@
 		(path "/dca8c643-197a-481d-9105-f8413ad10e66")
 		(sheetname "Root")
 		(sheetfile "USBCTester.kicad_sch")
-		(attr through_hole)
+		(attr through_hole exclude_from_pos_files exclude_from_bom)
 		(fp_line
 			(start 1.33 -1.33)
 			(end 1.33 0)
@@ -27107,7 +27107,7 @@
 		(path "/ed2a9329-fd38-4c3e-9046-96584c980684")
 		(sheetname "Root")
 		(sheetfile "USBCTester.kicad_sch")
-		(attr exclude_from_pos_files)
+		(attr exclude_from_pos_files exclude_from_bom)
 		(fp_circle
 			(center 0 0)
 			(end 3.2 0)
@@ -33097,31 +33097,6 @@
 		(layer "Edge.Cuts")
 		(uuid "823782d4-1aa5-46f7-8183-d5b33d17cb9f")
 	)
-	(gr_text "USB C TESTER\nPATRICK LEISER\nREV 1.0, 2024"
-		(at 166.878 86.233 0)
-		(layer "F.Paste")
-		(uuid "41699a26-7de3-4caa-920f-40d5da3ed59a")
-		(effects
-			(font
-				(size 1.5 1.5)
-				(thickness 0.3)
-				(bold yes)
-			)
-			(justify left bottom)
-		)
-	)
-	(gr_text "2.patronics.org/usbc"
-		(at 167.259 87.503 0)
-		(layer "F.Paste")
-		(uuid "44a61bb2-d997-4483-b380-0517dc0fe404")
-		(effects
-			(font
-				(size 1 1)
-				(thickness 0.15)
-			)
-			(justify left bottom)
-		)
-	)
 	(gr_text "GND\nGND\nVCC\nVCC\nVBUS\nVBUS\n3V3\n3V3\nADC2\nADC2\nI2C SDA\nI2C SDA\nI2C SCL\nI2C SCL"
 		(at 176.276 120.269 90)
 		(layer "B.SilkS")
@@ -33286,6 +33261,31 @@
 		(at 166.1668 69.4436 0)
 		(layer "F.SilkS")
 		(uuid "405f5174-4ae4-4fb4-a98a-9bbe7485d899")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+			(justify left bottom)
+		)
+	)
+	(gr_text "USB C TESTER\nPATRICK LEISER\nREV 1.0, 2024"
+		(at 166.878 86.233 0)
+		(layer "F.SilkS")
+		(uuid "41699a26-7de3-4caa-920f-40d5da3ed59a")
+		(effects
+			(font
+				(size 1.5 1.5)
+				(thickness 0.3)
+				(bold yes)
+			)
+			(justify left bottom)
+		)
+	)
+	(gr_text "2.patronics.org/usbc"
+		(at 167.259 87.503 0)
+		(layer "F.SilkS")
+		(uuid "44a61bb2-d997-4483-b380-0517dc0fe404")
 		(effects
 			(font
 				(size 1 1)

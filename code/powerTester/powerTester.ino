@@ -11,10 +11,42 @@
 
 /*
 Hardware version Errata:
-V1: test ports and U1, U2 unpopulated, red leds 15x brightness
-V2: Inputs SBU2 and DP1 shorted together; outputs SSTXP2 and SSTXPN2 shorted together; outputs VBUS and CC1 shorted together
-
+ERRATABOARD = 0: perfect fully functional board
+ERRATABOARD = 1: test ports and U1, U2 unpopulated, red leds 15x brightness
+ERRATABOARD = 2 DAMAGED, test port detached: Inputs SBU2 and DP1 shorted together; outputs SSTXP2 and SSTXPN2 shorted together; outputs VBUS and CC1 shorted together
+ERRATABOARD = 3: Outputs DP2 and CC2 and SSTXN2 and SBU1 and SBY2 and SSRXN1 and SSRXP1 shorted together; Inputs DP and DN and SBU2 shorted together
 */
+
+#define ERRATABOARD 1
+
+
+#if ERRATABOARD == 0  
+  #define ERRATA_SET
+#endif
+
+#if ERRATABOARD == 1
+  #define ERRATA_SET
+  #define USB_SHIFT_REG_BYPASS
+  #define BRIGHTLEDDIMFACTOR 15
+  #define NOPINSTEST
+#endif
+
+
+#if ERRATABOARD == 2
+  #define ERRATA_SET
+  #define NOPINSTEST
+#endif
+
+
+#if ERRATABOARD == 3
+  #define ERRATA_SET
+  //optional TODO HANDLE testing some pins
+  #define NOPINSTEST
+#endif
+
+#ifndef ERRATABOARD
+  #warning "Warning, no board errata defined"
+#endif
 
 ////Shift register pins
 #define shiftSRCLK 18
@@ -190,9 +222,19 @@ bool checkPinConnectionFull(long outPin, int inPin, long ledPin){
   return checkPinConnectionFast(outPin, inPin, ledPin);
 }
 
+bool checkPPS(){
+  if(usbpd.getExistPPS()){
+    return true;
+  }
+  return false;
+}
+
 byte scanVoltages(){
   
   byte voltageLEDs = 0x00;
+  voltageLEDs = voltageLEDs | (LEDPPS * checkPPS());
+
+//TODO: Scan voltage LEDs, all enabled ones at low brightness, then higher one at a time to indicate per-voltage current limits
   int maxCurrent = usbpd.getMaxCurrent();
   if (maxCurrent >= 2850){
     voltageLEDs = voltageLEDs | LED3A;
@@ -227,6 +269,7 @@ byte scanVoltages(){
   }
 
   usbpd.setVoltage(5000); //restore default 5v voltage
+
 
   return voltageLEDs;
 }
