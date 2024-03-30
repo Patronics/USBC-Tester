@@ -6,7 +6,7 @@
 
 
 //if U1 and U2 are unpopulated, green-wire U1 pin 14 to U2 pin 9 and define USB_SHIFT_REG_BYPASS
-#define USB_SHIFT_REG_BYPASS
+//#define USB_SHIFT_REG_BYPASS
 
 
 /*
@@ -65,7 +65,7 @@ software mapping (after calling remapLeds()):
 #define BRIGHTLEDMASK 0x1A000000   //to software-pwm the red LEDs to a more subtle level
 //#define BRIGHTLEDMASK 0x1FFFFFFF   //testing pwm dimming of green leds too
 
-#define BRIGHTLEDDIMFACTOR 15 //how much to reduce LED intensity, or comment out to disable software dimming
+//#define BRIGHTLEDDIMFACTOR 15 //how much to reduce LED intensity, or comment out to disable software dimming
 
 #define LED5V 0x01
 #define LED9V 0x02
@@ -127,6 +127,9 @@ void setup() {
 }
 
 void loop() {
+  //scanLeds(150);
+  //ledState = 0x1FFFFFFF;
+  //sendBits(ledState,0,true,false);
   // put your main code here, to run repeatedly:
   ledState = ledState & 0x000000FF;  //persist power state, rescan other inputs
   if(checkShieldConnection()){
@@ -274,6 +277,8 @@ usbBits = remaining 19 values to shift out (important to note that the 3 LSB WIL
 void sendBits(long ledBits, long usbBits, bool ledEnable, bool usbEnable){
   digitalWrite(shiftOEUSB,HIGH);
   digitalWrite(shiftOELEDs,HIGH);
+  //digitalWrite(shiftOEUSB,LOW); //for testing, simulate no OE pin
+  //digitalWrite(shiftOELEDs, LOW);
   ledBits = remapLeds(ledBits);
 
   for(int i=24; i<29; i++){   //shift out last few LEDs
@@ -291,6 +296,7 @@ void sendBits(long ledBits, long usbBits, bool ledEnable, bool usbEnable){
   for(int i=0; i<24; i++){  //shift out most of LEDs
     shiftOutBit(ledBits, i);
   }
+  digitalWrite(shiftRCLK, HIGH);
 
   digitalWrite(shiftOEUSB,!usbEnable); //OE is active low, so invert
   digitalWrite(shiftOELEDs,!ledEnable);
@@ -334,7 +340,7 @@ void shiftOutBit(long word, int chosenBit){
   //delayMicroseconds(1); //technically only 0.2uS delay needed
   digitalWrite(shiftSRCLK, HIGH);
   //delayMicroseconds(1);  //unnecessary except for final shift, but harmless.
-  digitalWrite(shiftRCLK, HIGH);
+  //digitalWrite(shiftRCLK, HIGH);
   //delayMicroseconds(1);
 }
 
