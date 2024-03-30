@@ -17,7 +17,7 @@ ERRATABOARD = 2 DAMAGED, test port detached: Inputs SBU2 and DP1 shorted togethe
 ERRATABOARD = 3: Outputs DP2 and CC2 and SSTXN2 and SBU1 and SBY2 and SSRXN1 and SSRXP1 shorted together; Inputs DP and DN and SBU2 shorted together
 */
 
-#define ERRATABOARD 1
+#define ERRATABOARD 4
 
 
 #if ERRATABOARD == 0  
@@ -42,6 +42,12 @@ ERRATABOARD = 3: Outputs DP2 and CC2 and SSTXN2 and SBU1 and SBY2 and SSRXN1 and
   #define ERRATA_SET
   //optional TODO HANDLE testing some pins
   #define NOPINSTEST
+#endif
+
+#if ERRATABOARD == 4
+  #define ERRATA_SET
+  //optional TODO HANDLE testing some pins
+  //#define NOPINSTEST
 #endif
 
 #ifndef ERRATABOARD
@@ -223,9 +229,9 @@ bool checkPinConnectionFull(long outPin, int inPin, long ledPin){
 }
 
 bool checkPPS(){
-  if(usbpd.getExistPPS()){
+ /* if(usbpd.getExistPPS()){
     return true;
-  }
+  }*/
   return false;
 }
 
