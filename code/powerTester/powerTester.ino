@@ -94,6 +94,8 @@ ERRATABOARD = 3: Outputs DP2 and CC2 and SSTXN2 and SBU1 and SBY2 and SSRXN1 and
 ////USB C testing pins - Shift register outputs
 
 #define USBoutSHIELD 0x000004
+#define USBoutSBU1   0x000400
+#define USBoutSBU2   0x020000
 //TODO COMPLETE LIST
 
 ////LED Outputs:
@@ -122,6 +124,9 @@ software mapping (after calling remapLeds()):
 #define LED5A 0x80
 
 //TODO Data,other, status led pins
+
+#define LEDSBU1    0x00400000
+#define LEDSBU2    0x00800000
 
 #define LEDSHIELD  0x01000000
 #define LEDFLIPPED 0x02000000
@@ -158,6 +163,8 @@ void setup() {
 
 
   pinMode(USBinSHIELD, USB_TEST_INPUT_TYPE);
+  pinMode(USBinSBU1, USB_TEST_INPUT_TYPE);
+  pinMode(USBinSBU2, USB_TEST_INPUT_TYPE);
 
 
   digitalWrite(shiftOELEDs, HIGH);
@@ -180,6 +187,8 @@ void loop() {
   // put your main code here, to run repeatedly:
   ledState = ledState & 0x000000FF;  //persist power state, rescan other inputs
   if(checkShieldConnection()){
+    checkPinConnectionFast(USBoutSBU1, USBinSBU1, LEDSBU1);
+    checkPinConnectionFast(USBoutSBU2, USBinSBU2, LEDSBU2);
     //check other pins only when shield is connected
   } else {
     ledState = ledState | LEDABSENT;
@@ -198,11 +207,18 @@ void loop() {
 }
 
 bool checkShieldConnection(){
-  if (checkPinConnectionFastWithUSBEnablePinSetAs(USBoutSHIELD, USBinSHIELD, LEDNONE, false)){
-    ledState = ledState | LEDSHIELD;
-    return true;
+  //if (checkPinConnectionFastWithUSBEnablePinSetAs(USBoutSHIELD, USBinSHIELD, LEDNONE, false)){
+  //shield should be tied to ground, so only test driving it low
+  sendBits(ledState, 0, true, true); //test low first, and flash the led corresponding to pin under test
+  delayMicroseconds(20);   //give time for bits to settle and LED to flash
+  if (digitalRead(USBinSHIELD)){
+    Serial.println("test outPin "+String(USBoutSHIELD)+" connection to inPin "+String(USBinSHIELD)+" failed, expected LOW, got HIGH");
+    sendBits(ledState, 0, true, false); //restore LEDs and disable output
+    return false;
   }
-  return false;
+
+  ledState = ledState | LEDSHIELD;
+  return true;
 }
 
 //check continuity of a specified pin
@@ -212,7 +228,7 @@ bool checkPinConnectionFast(long outPin,int inPin,long ledPin){
 
 //helper function for checkPinConnectionFast, use with usbEnable true except when testing shield pin
 bool checkPinConnectionFastWithUSBEnablePinSetAs(long outPin,int inPin,long ledPin, bool usbEnable){
-  sendBits(ledState|ledPin, 0, true, usbEnable); //test low first, and flash the led corresponding to pin under test
+  sendBits(ledState, 0, true, usbEnable); //test low first, and flash the led corresponding to pin under test
   delayMicroseconds(20);   //give time for bits to settle and LED to flash
   if (digitalRead(inPin)){
     Serial.println("test outPin "+String(outPin)+" connection to inPin "+String(inPin)+" failed, expected LOW, got HIGH");
