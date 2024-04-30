@@ -133,6 +133,8 @@ software mapping (after calling remapLeds()):
 #define LED15V 0x08
 #define LED20V 0x10
 #define LEDPPS 0x20
+#define LED1A 0x20000000
+#define LED2A 0x40000000
 #define LED3A 0x40
 #define LED5A 0x80
 
@@ -190,6 +192,7 @@ void setup() {
   scanLeds(50); //test all LEDs and give AP33772 time to initialize
   usbpd.begin();
   usbpd.printPDO();
+   scanLeds(350);
   ledState = ledState | scanVoltages();
 }
 
@@ -270,7 +273,7 @@ bool checkPPS(){
  /* if(usbpd.getExistPPS()){
     return true;
   }*/
-  return false;
+  return true;
 }
 
 byte scanVoltages(){
@@ -280,6 +283,12 @@ byte scanVoltages(){
 
 //TODO: Scan voltage LEDs, all enabled ones at low brightness, then higher one at a time to indicate per-voltage current limits
   int maxCurrent = usbpd.getMaxCurrent();
+  /*if (maxCurrent >= 950){
+    voltageLEDs = voltageLEDs | LED1A;
+  }
+  if (maxCurrent >= 1850){
+    voltageLEDs = voltageLEDs | LED2A;
+  }*/
   if (maxCurrent >= 2850){
     voltageLEDs = voltageLEDs | LED3A;
   }
@@ -344,29 +353,48 @@ bool checkForSupportedVoltageInToleranceRange(int targetmV,long ledsToFlash, int
 //do a scan to demonstrate that all LEDs are functional
 void scanLeds(int loopDelay){
   digitalWrite(internalLED, !digitalRead(internalLED));
-  for(int i=1; i<pow(2,29); i=i*2){
+  for(int i=1; i<pow(2,31); i=i*2){
     sendBits(i, 0, true, false);
     delay(loopDelay);
   }
 
 }
 
+
+void sendBits(long ledBits, long usbBits, bool ledEnable, bool usbEnable){
+  sendBits(ledBits, usbBits, 0, ledEnable, usbEnable);
+}
+
 /*ledBits - software mapping:
-0x000000FF > power
+0x000000FF > power (original set)
 0x00000F00 > usb 2
 0x000FF000 > usb 3
 0x00F00000 > other
 0x1F000000 > status
-0xE0000000 > unused (ignored)
+0x60000000 > power (1A and 2A)
+0x80000000 > unused (ignored)
 
 usbBits = remaining 19 values to shift out (important to note that the 3 LSB WILL be set if ledEnable is true even if usbEnable is false)
 */
-void sendBits(long ledBits, long usbBits, bool ledEnable, bool usbEnable){
+void sendBits(long ledBits, long usbBits, long GPOBits, bool ledEnable, bool usbEnable){
   digitalWrite(shiftOEUSB,HIGH);
   digitalWrite(shiftOELEDs,HIGH);
   //digitalWrite(shiftOEUSB,LOW); //for testing, simulate no OE pin
   //digitalWrite(shiftOELEDs, LOW);
-  ledBits = remapLeds(ledBits);
+
+  ledBits = remapLeds(ledBits); //shift out 1A and 2A power leds
+
+  for(int i=0; i<4; i++){  //general purpose output bits E,F,G,H
+    shiftOutBit(GPOBits, i);
+  }
+  
+  for(int i=29; i<31; i++){
+    shiftOutBit(ledBits, i);
+  }
+
+  for(int i=19; i<21; i++){  //shift out USB vbus and gnd
+    shiftOutBit(usbBits, i);
+  }
 
   for(int i=24; i<29; i++){   //shift out last few LEDs
     shiftOutBit(ledBits, i);
@@ -392,11 +420,14 @@ void sendBits(long ledBits, long usbBits, bool ledEnable, bool usbEnable){
 /*
 LED
 software mapping:
-0x000000FF > power
+0x000000FF > power (voltages and PPS, 3A, 5A)
 0x00000F00 > usb 2
 0x000FF000 > usb 3
 0x00F00000 > other
 0x1F000000 > status
+0x60000000 > power (1A, 2A)
+
+0x80000000 > unused
 
 hardware mapping:
 0x00FF0000 > power (voltages and PPS, 3A, 5A)
@@ -407,18 +438,18 @@ hardware mapping:
 0x00000007 > usb 3 - bit 5-7
 0x00000078 > other
 0x1F000000 > status
-0x
+0x60000000 > Power (1A, 2A) //Note that these are on a distinct shift register, not physically adjacent to the others (handled in sendbits)
 */
 
 //remap bit order of LEDs to simplify understanding
 long remapLeds(long cleanMapping){
   
-  long remapped = ((cleanMapping &   0xFF) << 16); //Power
+  long remapped = ((cleanMapping &   0xFF) << 16); //Power (original set)
   remapped += ((cleanMapping &     0x0F00) << 4);  //usb 2
   remapped += ((cleanMapping &    0x0F000) >> 4);  // usb 3 bit 0-3
   remapped += ((cleanMapping &    0x10000) >> 9);  // usb 3 bit 4
   remapped += ((cleanMapping &    0xFE0000) >> 17); // other and usb 3 bit 5-7
-  remapped += (cleanMapping & 0x1F000000);         //status
+  remapped += (cleanMapping & 0x7F000000);         //status and Power (1A and 2A)
   return remapped;
 }
 
