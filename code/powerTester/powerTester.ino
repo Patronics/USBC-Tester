@@ -9,19 +9,23 @@
 //#define USB_SHIFT_REG_BYPASS
 
 
+
 /*
 Hardware version Errata:
-ERRATABOARD = 0: perfect fully functional board
+ERRATABOARD = 0: perfect fully functional board, revision 1.1
 ERRATABOARD = 1: test ports and U1, U2 unpopulated, red leds 15x brightness
 ERRATABOARD = 2 DAMAGED, test port detached: Inputs SBU2 and DP1 shorted together; outputs SSTXP2 and SSTXPN2 shorted together; outputs VBUS and CC1 shorted together
 ERRATABOARD = 3: Outputs DP2 and CC2 and SSTXN2 and SBU1 and SBY2 and SSRXN1 and SSRXP1 shorted together; Inputs DP and DN and SBU2 shorted together
+ERRATABOARD = 4: Assembled with the open-collector shift registers
+ERRATABOARD = 5: Fully functional Rev 1.0 board
 */
 
-#define ERRATABOARD 4
+#define ERRATABOARD 0
 
 
 #if ERRATABOARD == 0  
   #define ERRATA_SET
+  #define BOARD_REVISION 1.1
 #endif
 
 #if ERRATABOARD == 1
@@ -29,12 +33,14 @@ ERRATABOARD = 3: Outputs DP2 and CC2 and SSTXN2 and SBU1 and SBY2 and SSRXN1 and
   #define USB_SHIFT_REG_BYPASS
   #define BRIGHTLEDDIMFACTOR 15
   #define NOPINSTEST
+  #define BOARD_REVISION 1.0
 #endif
 
 
 #if ERRATABOARD == 2
   #define ERRATA_SET
   #define NOPINSTEST
+  #define BOARD_REVISION 1.0
 #endif
 
 
@@ -42,6 +48,7 @@ ERRATABOARD = 3: Outputs DP2 and CC2 and SSTXN2 and SBU1 and SBY2 and SSRXN1 and
   #define ERRATA_SET
   //optional TODO HANDLE testing some pins
   #define NOPINSTEST
+  #define BOARD_REVISION 1.0
 #endif
 
 #if ERRATABOARD == 4
@@ -49,6 +56,12 @@ ERRATABOARD = 3: Outputs DP2 and CC2 and SSTXN2 and SBU1 and SBY2 and SSRXN1 and
   //optional TODO HANDLE testing some pins
   //#define NOPINSTEST
   #define PULL_UP_INPUTS
+  #define BOARD_REVISION 1.0
+#endif
+
+#if ERRATABOARD == 5
+  #define ERRATA_SET
+  #define BOARD_REVISION 1.0
 #endif
 
 #ifndef ERRATABOARD
@@ -377,6 +390,7 @@ void sendBits(long ledBits, long usbBits, bool ledEnable, bool usbEnable){
 }
 
 /*
+LED
 software mapping:
 0x000000FF > power
 0x00000F00 > usb 2
@@ -385,7 +399,7 @@ software mapping:
 0x1F000000 > status
 
 hardware mapping:
-0x00FF0000 > power
+0x00FF0000 > power (voltages and PPS, 3A, 5A)
 0x0000F000 > usb 2
 0x00000F87 > usb 3
 0x00000F00 > usb 3 - bit 0-3
@@ -393,6 +407,7 @@ hardware mapping:
 0x00000007 > usb 3 - bit 5-7
 0x00000078 > other
 0x1F000000 > status
+0x
 */
 
 //remap bit order of LEDs to simplify understanding
