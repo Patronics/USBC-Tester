@@ -160,7 +160,7 @@ software mapping (after calling remapLeds()):
 AP33772 usbpd; // Automatically wire to Wire0
 
 //global to persist voltages detected
-long ledState = 0x00000F00;
+unsigned long ledState = 0x00000F00;
 
 //count when to enable pulses of bright leds for PWM
 int brightLedPulseCounter = 0;
@@ -192,7 +192,7 @@ void setup() {
   scanLeds(50); //test all LEDs and give AP33772 time to initialize
   usbpd.begin();
   usbpd.printPDO();
-   scanLeds(350);
+  //scanLeds(150);
   ledState = ledState | scanVoltages();
 }
 
@@ -201,7 +201,7 @@ void loop() {
   //ledState = 0x1FFFFFFF;
   //sendBits(ledState,0,true,false);
   // put your main code here, to run repeatedly:
-  ledState = ledState & 0x000000FF;  //persist power state, rescan other inputs
+  ledState = ledState & 0x600000FF;  //persist power state, rescan other inputs
   if(checkShieldConnection()){
     checkPinConnectionFast(USBoutSBU1, USBinSBU1, LEDSBU1);
     checkPinConnectionFast(USBoutSBU2, USBinSBU2, LEDSBU2);
@@ -238,12 +238,12 @@ bool checkShieldConnection(){
 }
 
 //check continuity of a specified pin
-bool checkPinConnectionFast(long outPin,int inPin,long ledPin){
+bool checkPinConnectionFast(unsigned long outPin,int inPin,unsigned long ledPin){
   return checkPinConnectionFastWithUSBEnablePinSetAs(outPin, inPin, ledPin, true);
 }
 
 //helper function for checkPinConnectionFast, use with usbEnable true except when testing shield pin
-bool checkPinConnectionFastWithUSBEnablePinSetAs(long outPin,int inPin,long ledPin, bool usbEnable){
+bool checkPinConnectionFastWithUSBEnablePinSetAs(unsigned long outPin,int inPin,unsigned long ledPin, bool usbEnable){
   sendBits(ledState, 0, true, usbEnable); //test low first, and flash the led corresponding to pin under test
   delayMicroseconds(20);   //give time for bits to settle and LED to flash
   if (digitalRead(inPin)){
@@ -264,7 +264,7 @@ bool checkPinConnectionFastWithUSBEnablePinSetAs(long outPin,int inPin,long ledP
 }
 
 //check continuity of a specified pin, AND that no other pins are shorted to it
-bool checkPinConnectionFull(long outPin, int inPin, long ledPin){
+bool checkPinConnectionFull(unsigned long outPin, int inPin, unsigned long ledPin){
   //stub function, unimplemented
   return checkPinConnectionFast(outPin, inPin, ledPin);
 }
@@ -273,22 +273,22 @@ bool checkPPS(){
  /* if(usbpd.getExistPPS()){
     return true;
   }*/
-  return true;
+  return false;
 }
 
-byte scanVoltages(){
+unsigned long scanVoltages(){
   
-  byte voltageLEDs = 0x00;
+  unsigned long voltageLEDs = 0x00;
   voltageLEDs = voltageLEDs | (LEDPPS * checkPPS());
 
 //TODO: Scan voltage LEDs, all enabled ones at low brightness, then higher one at a time to indicate per-voltage current limits
   int maxCurrent = usbpd.getMaxCurrent();
-  /*if (maxCurrent >= 950){
+  if (maxCurrent >= 950){
     voltageLEDs = voltageLEDs | LED1A;
   }
   if (maxCurrent >= 1850){
     voltageLEDs = voltageLEDs | LED2A;
-  }*/
+  }
   if (maxCurrent >= 2850){
     voltageLEDs = voltageLEDs | LED3A;
   }
@@ -328,11 +328,11 @@ byte scanVoltages(){
 }
 
 //check if voltage is supported within +/- 5% tolerance
-bool checkForSupportedVoltage(int targetmV,long ledsToFlash){
+bool checkForSupportedVoltage(int targetmV,unsigned long ledsToFlash){
   return checkForSupportedVoltageInToleranceRange(targetmV,ledsToFlash,targetmV*0.95,targetmV*1.05);
 }
 
-bool checkForSupportedVoltageInToleranceRange(int targetmV,long ledsToFlash, int minRange, int maxRange){
+bool checkForSupportedVoltageInToleranceRange(int targetmV,unsigned long ledsToFlash, int minRange, int maxRange){
   digitalWrite(VBUSSwitch, LOW); //make sure voltage is not output to VBUS
   usbpd.setVoltage(targetmV);
   for(int i=0; i<5; i++){
@@ -353,7 +353,7 @@ bool checkForSupportedVoltageInToleranceRange(int targetmV,long ledsToFlash, int
 //do a scan to demonstrate that all LEDs are functional
 void scanLeds(int loopDelay){
   digitalWrite(internalLED, !digitalRead(internalLED));
-  for(int i=1; i<pow(2,31); i=i*2){
+  for(unsigned long i=1; i<pow(2,31); i=i*2){
     sendBits(i, 0, true, false);
     delay(loopDelay);
   }
@@ -361,7 +361,7 @@ void scanLeds(int loopDelay){
 }
 
 
-void sendBits(long ledBits, long usbBits, bool ledEnable, bool usbEnable){
+void sendBits(unsigned long ledBits, unsigned long usbBits, bool ledEnable, bool usbEnable){
   sendBits(ledBits, usbBits, 0, ledEnable, usbEnable);
 }
 
@@ -376,7 +376,7 @@ void sendBits(long ledBits, long usbBits, bool ledEnable, bool usbEnable){
 
 usbBits = remaining 19 values to shift out (important to note that the 3 LSB WILL be set if ledEnable is true even if usbEnable is false)
 */
-void sendBits(long ledBits, long usbBits, long GPOBits, bool ledEnable, bool usbEnable){
+void sendBits(unsigned long ledBits, unsigned long usbBits, unsigned long GPOBits, bool ledEnable, bool usbEnable){
   digitalWrite(shiftOEUSB,HIGH);
   digitalWrite(shiftOELEDs,HIGH);
   //digitalWrite(shiftOEUSB,LOW); //for testing, simulate no OE pin
@@ -442,9 +442,9 @@ hardware mapping:
 */
 
 //remap bit order of LEDs to simplify understanding
-long remapLeds(long cleanMapping){
+unsigned long remapLeds(unsigned long cleanMapping){
   
-  long remapped = ((cleanMapping &   0xFF) << 16); //Power (original set)
+  unsigned long remapped = ((cleanMapping &   0xFF) << 16); //Power (original set)
   remapped += ((cleanMapping &     0x0F00) << 4);  //usb 2
   remapped += ((cleanMapping &    0x0F000) >> 4);  // usb 3 bit 0-3
   remapped += ((cleanMapping &    0x10000) >> 9);  // usb 3 bit 4
@@ -453,7 +453,7 @@ long remapLeds(long cleanMapping){
   return remapped;
 }
 
-void shiftOutBit(long word, int chosenBit){
+void shiftOutBit(unsigned long word, int chosenBit){
   digitalWrite(shiftSRCLK, LOW);
   digitalWrite(shiftRCLK,LOW);
   digitalWrite(shiftSer, bitRead(word, chosenBit));
