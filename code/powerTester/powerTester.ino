@@ -138,6 +138,10 @@ software mapping (after calling remapLeds()):
 #define LED3A 0x40
 #define LED5A 0x80
 
+#define AllVoltageLEDs (LED5V | LED9V | LED12V | LED15V | LED20V)
+#define AllCurrentLEDs (LED5A | LED3A | LED2A | LED1A)
+#define AllPowerLEDs (AllVoltageLEDs | AllCurrentLEDs | LEDPPS)
+
 //TODO Data,other, status led pins
 
 #define LEDSBU1    0x00400000
@@ -201,7 +205,7 @@ void loop() {
   //ledState = 0x1FFFFFFF;
   //sendBits(ledState,0,true,false);
   // put your main code here, to run repeatedly:
-  ledState = ledState & 0x600000FF;  //persist power state, rescan other inputs
+  ledState = ledState & AllPowerLEDs;  //persist power state, rescan other inputs
   if(checkShieldConnection()){
     checkPinConnectionFast(USBoutSBU1, USBinSBU1, LEDSBU1);
     checkPinConnectionFast(USBoutSBU2, USBinSBU2, LEDSBU2);
@@ -223,11 +227,11 @@ void loop() {
 }
 
 bool checkShieldConnection(){
-  //if (checkPinConnectionFastWithUSBEnablePinSetAs(USBoutSHIELD, USBinSHIELD, LEDNONE, false)){
+  if (checkPinConnectionFastWithUSBEnablePinSetAs(USBoutSHIELD, USBinSHIELD, LEDNONE, false)){
   //shield should be tied to ground, so only test driving it low
-  sendBits(ledState, 0, true, true); //test low first, and flash the led corresponding to pin under test
-  delayMicroseconds(20);   //give time for bits to settle and LED to flash
-  if (digitalRead(USBinSHIELD)){
+  //sendBits(ledState, 0, true, true); //test low first, and flash the led corresponding to pin under test
+  //delayMicroseconds(20);   //give time for bits to settle and LED to flash
+  //if (digitalRead(USBinSHIELD)){
     Serial.println("test outPin "+String(USBoutSHIELD)+" connection to inPin "+String(USBinSHIELD)+" failed, expected LOW, got HIGH");
     sendBits(ledState, 0, true, false); //restore LEDs and disable output
     return false;
@@ -270,51 +274,72 @@ bool checkPinConnectionFull(unsigned long outPin, int inPin, unsigned long ledPi
 }
 
 bool checkPPS(){
- /* if(usbpd.getExistPPS()){
+  if(usbpd.getExistPPS()){
     return true;
-  }*/
+  }
   return false;
 }
+
+//specify target voltage in millivolts, or -1 for overall maximum
+unsigned int getCurrentLEDsForVoltage(int targetVoltage){
+  unsigned int currentLEDs = 0;
+  int maxCurrent = 0;
+  if (targetVoltage == -1){ //get overall MaxCurrent
+    maxCurrent = usbpd.getMaxCurrent();
+  } else {
+    usbpd.getMaxCurrentForVoltage(targetVoltage);
+  }
+  if (maxCurrent >= 950){
+    currentLEDs = currentLEDs | LED1A;
+  }
+  if (maxCurrent >= 1850){
+    currentLEDs = currentLEDs | LED2A;
+  }
+  if (maxCurrent >= 2850){
+    currentLEDs = currentLEDs | LED3A;
+  }
+  if (maxCurrent >= 4750){
+    currentLEDs = currentLEDs | LED5A;
+  }
+  return currentLEDs;
+}
+
 
 unsigned long scanVoltages(){
   
   unsigned long voltageLEDs = 0x00;
   voltageLEDs = voltageLEDs | (LEDPPS * checkPPS());
-
-//TODO: Scan voltage LEDs, all enabled ones at low brightness, then higher one at a time to indicate per-voltage current limits
-  int maxCurrent = usbpd.getMaxCurrent();
-  if (maxCurrent >= 950){
-    voltageLEDs = voltageLEDs | LED1A;
-  }
-  if (maxCurrent >= 1850){
-    voltageLEDs = voltageLEDs | LED2A;
-  }
-  if (maxCurrent >= 2850){
-    voltageLEDs = voltageLEDs | LED3A;
-  }
-  if (maxCurrent >= 4750){
-    voltageLEDs = voltageLEDs | LED5A;
-  }
+  
+  ledState = (voltageLEDs & ~AllCurrentLEDs) | getCurrentLEDsForVoltage(5000);
+  sendBits(ledState,0,true,false);
   if (checkForSupportedVoltageInToleranceRange(5000,LED5V,4750,5500)){  //max voltage is 5.5 to comply with USB 2.0 spec
     voltageLEDs = voltageLEDs | LED5V;
     ledState = ledState | voltageLEDs;
     sendBits(ledState,0,true,false);
   }
+  ledState = (voltageLEDs & ~AllCurrentLEDs) | getCurrentLEDsForVoltage(9000);
+  sendBits(ledState,0,true,false);
   if(checkForSupportedVoltage(9000,LED9V)){
     voltageLEDs = voltageLEDs | LED9V;
     ledState = ledState | voltageLEDs;
     sendBits(ledState,0,true,false);
   }
+  ledState = (voltageLEDs & ~AllCurrentLEDs) | getCurrentLEDsForVoltage(12000);
+  sendBits(ledState,0,true,false);
   if(checkForSupportedVoltage(12000, LED12V)){
     voltageLEDs = voltageLEDs | LED12V;
     ledState = ledState | voltageLEDs;
     sendBits(ledState,0,true,false);
   }
+  ledState = (voltageLEDs & ~AllCurrentLEDs) | getCurrentLEDsForVoltage(15000);
+  sendBits(ledState,0,true,false);
   if(checkForSupportedVoltage(15000,LED15V)){
     voltageLEDs = voltageLEDs | LED15V;
     ledState = ledState | voltageLEDs;
     sendBits(ledState,0,true,false);
   }
+  ledState = (voltageLEDs & ~AllCurrentLEDs) | getCurrentLEDsForVoltage(20000);
+  sendBits(ledState,0,true,false);
   if(checkForSupportedVoltage(20000,LED20V)){
     voltageLEDs = voltageLEDs | LED20V;
     ledState = ledState | voltageLEDs;
@@ -322,7 +347,7 @@ unsigned long scanVoltages(){
   }
 
   usbpd.setVoltage(5000); //restore default 5v voltage
-
+  voltageLEDs = (voltageLEDs & ~AllCurrentLEDs) | getCurrentLEDsForVoltage(-1);
 
   return voltageLEDs;
 }
@@ -360,7 +385,7 @@ void scanLeds(int loopDelay){
 
 }
 
-
+//backwards compatible function call, leaving the 4 general purpose outputs unused
 void sendBits(unsigned long ledBits, unsigned long usbBits, bool ledEnable, bool usbEnable){
   sendBits(ledBits, usbBits, 0, ledEnable, usbEnable);
 }
@@ -382,13 +407,13 @@ void sendBits(unsigned long ledBits, unsigned long usbBits, unsigned long GPOBit
   //digitalWrite(shiftOEUSB,LOW); //for testing, simulate no OE pin
   //digitalWrite(shiftOELEDs, LOW);
 
-  ledBits = remapLeds(ledBits); //shift out 1A and 2A power leds
+  ledBits = remapLeds(ledBits);
 
-  for(int i=0; i<4; i++){  //general purpose output bits E,F,G,H
+  for(int i=0; i<4; i++){   //general purpose output bits E,F,G,H
     shiftOutBit(GPOBits, i);
   }
   
-  for(int i=29; i<31; i++){
+  for(int i=29; i<31; i++){  //shift out 1A and 2A power leds
     shiftOutBit(ledBits, i);
   }
 
