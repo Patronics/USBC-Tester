@@ -6,8 +6,8 @@
 
 
 #define VERSION_MAJOR 0
-#define VERSION_MINOR 2
-#define VERSION_PATCH 1
+#define VERSION_MINOR 3
+#define VERSION_PATCH 2
 
 //generate a pseudo-random unique hash from semver to display installed software version on leds
 #define VERSION_HASH ((VERSION_MAJOR * 5823 + (VERSION_MINOR)%4096)*1409%4096+VERSION_PATCH%4096)
@@ -175,7 +175,6 @@ software mapping:
 #define AllCurrentLEDs (LED5A | LED3A | LED2A | LED1A)
 #define AllPowerLEDs (AllVoltageLEDs | AllCurrentLEDs | LEDPPS)
 
-
 #define LEDGND     0x100
 #define LEDVBUS    0x200
 #define LEDDN  0x400
@@ -257,9 +256,7 @@ void loop() {
   // put your main code here, to run repeatedly:
   ledState = ledState & AllPowerLEDs;  //persist power state, rescan other inputs
   //if(checkShieldConnection()){
-    checkPinConnectionFast(USBoutDP1|USBoutDP2, USBinDP, LEDDP);
-    checkPinConnectionFast(USBoutSBU1, USBinSBU1, LEDSBU1);
-    checkPinConnectionFast(USBoutSBU2, USBinSBU2, LEDSBU2);
+    checkAllPins();
     //check other pins only when shield is connected
   //} else {
   //  ledState = ledState | LEDABSENT;
@@ -277,21 +274,6 @@ void loop() {
 
 }
 
-bool checkShieldConnection(){
-  if (checkPinConnectionFastWithUSBEnablePinSetAs(USBoutSHIELD, USBinSHIELD, LEDNONE, false)){
-  //shield should be tied to ground, so only test driving it low
-  //sendBits(ledState, 0, true, true); //test low first, and flash the led corresponding to pin under test
-  //delayMicroseconds(20);   //give time for bits to settle and LED to flash
-  //if (digitalRead(USBinSHIELD)){
-    Serial.println("test outPin "+String(USBoutSHIELD)+" connection to inPin "+String(USBinSHIELD)+" failed, expected LOW, got HIGH");
-    sendBits(ledState, 0, true, false); //restore LEDs and disable output
-    return false;
-  }
-
-  ledState = ledState | LEDSHIELD;
-  return true;
-}
-
 //show the version currently installed on the LEDs
 void displayVersionAndHash(){
   long versionLedSequence = 0;
@@ -304,6 +286,33 @@ void displayVersionAndHash(){
   versionLedSequence = versionLedSequence | VERSION_MAJOR%4 * LED3A;
   versionLedSequence = versionLedSequence | VERSION_HASH * 0x1000;    //set USB3 and other lights to version hash
   sendBits(versionLedSequence, 0, true, false);
+}
+
+void checkAllPins(){
+
+  //checkPinConnectionFastWithUSBEnablePinSetAs(USBoutVBUS, USBinVBUS, LEDVBUS,false); TODO Debug this one (is led enable active?)
+  //TODO why do these two go dark when fully connected?
+  //checkPinConnectionFast(USBoutGND|USBoutSHIELD, USBinGND, LEDGND);
+  //checkPinConnectionFast(USBoutGND|USBoutSHIELD, USBinSHIELD, LEDSHIELD);
+  checkPinConnectionFast(USBoutDP1|USBoutDP2, USBinDP, LEDDP);
+  checkPinConnectionFast(USBoutDN1|USBoutDN2, USBinDN, LEDDN);
+
+  checkPinConnectionFast(USBoutDP1, USBinDP, LEDFLIPPED);
+  
+  checkPinConnectionFast(USBoutSSTXP1, USBinSSTXP1, LEDSSTXP1);
+  checkPinConnectionFast(USBoutSSTXN1, USBinSSTXN1, LEDSSTXN1);
+  checkPinConnectionFast(USBoutSSRXP1, USBinSSRXP1, LEDSSRXP1);
+  checkPinConnectionFast(USBoutSSRXN1, USBinSSRXN1, LEDSSRXN1);
+  checkPinConnectionFast(USBoutSSTXP2, USBinSSTXP2, LEDSSTXP2);
+  checkPinConnectionFast(USBoutSSTXN2, USBinSSTXN2, LEDSSTXN2);
+  checkPinConnectionFast(USBoutSSRXP2, USBinSSRXP2, LEDSSRXP2);
+  checkPinConnectionFast(USBoutSSRXN2, USBinSSRXN2, LEDSSRXN2);
+  //checkPinConnectionFast(USBoutSBU1, USBinSBU1, LEDSBU1);
+  //checkPinConnectionFast(USBoutSBU2, USBinSBU2, LEDSBU2);
+  checkPinConnectionFast(USBoutSBU1|USBoutSBU2, USBinSBU1, LEDSBU1);
+  checkPinConnectionFast(USBoutSBU2|USBoutSBU1, USBinSBU2, LEDSBU2);
+  //checkShieldConnection();
+
 }
 
 //check continuity of a specified pin
@@ -329,6 +338,21 @@ bool checkPinConnectionFastWithUSBEnablePinSetAs(unsigned long outPin,int inPin,
   }
   ledState = ledState | ledPin;
   sendBits(ledState, 0, true, false);
+  return true;
+}
+
+bool checkShieldConnection(){
+  if (checkPinConnectionFastWithUSBEnablePinSetAs(USBoutSHIELD, USBinSHIELD, LEDNONE, false)){
+  //shield should be tied to ground, so only test driving it low
+  //sendBits(ledState, 0, true, true); //test low first, and flash the led corresponding to pin under test
+  //delayMicroseconds(20);   //give time for bits to settle and LED to flash
+  //if (digitalRead(USBinSHIELD)){
+    Serial.println("test outPin "+String(USBoutSHIELD)+" connection to inPin "+String(USBinSHIELD)+" failed, expected LOW, got HIGH");
+    sendBits(ledState, 0, true, false); //restore LEDs and disable output
+    return false;
+  }
+
+  ledState = ledState | LEDSHIELD;
   return true;
 }
 
