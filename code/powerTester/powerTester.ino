@@ -6,8 +6,8 @@
 
 
 #define VERSION_MAJOR 0
-#define VERSION_MINOR 1
-#define VERSION_PATCH 2
+#define VERSION_MINOR 2
+#define VERSION_PATCH 0
 
 //generate a pseudo-random unique hash from semver to display installed software version on leds
 #define VERSION_HASH ((VERSION_MAJOR * 5823 + (VERSION_MINOR)%4096)*1409%4096+VERSION_PATCH%4096)
@@ -114,19 +114,44 @@ ERRATABOARD = 5: Fully functional Rev 1.0 board
 
 ////USB C testing pins - Shift register outputs
 
-#define USBoutSHIELD 0x000004
-#define USBoutSBU1   0x000400
-#define USBoutSBU2   0x020000
-//TODO COMPLETE LIST
+#define USBoutVBUS   0x080000
+//use USBoutGND with caution, as it's tied to the USBoutSHIELD pin by most cables
+#define USBoutGND    0x100000
+#define USBoutDP1    0x000800
+#define USBoutDP2    0x000008
+#define USBoutDN1    0x000400
+#define USBoutDN2    0x040000
 
-////LED Outputs:
-/*
-software mapping (after calling remapLeds()):
-0x000000FF > power
+#define USBoutSSTXP1 0x004000
+#define USBoutSSTXN1 0x002000
+#define USBoutSSRXP1 0x008000
+#define USBoutSSRXN1 0x010000
+#define USBoutSSTXP2 0x000040
+#define USBoutSSTXN2 0x000020
+#define USBoutSSRXP2 0x000080
+#define USBoutSSRXN2 0x000100
+
+
+#define USBoutSBU1   0x000200
+#define USBoutSBU2   0x020000
+
+#define USBoutCC1    0x001000
+#define USBoutCC2    0x000010
+
+#define USBoutSHIELD 0x000004
+#define USBpullupCC1 0x000002
+#define USBpullupCC2 0x000001
+
+
+/*LED Outputs:
+software mapping:
+0x000000FF > power (voltages and PPS, 3A, 5A)
 0x00000F00 > usb 2
 0x000FF000 > usb 3
 0x00F00000 > other
 0x1F000000 > status
+0x60000000 > power (1A, 2A)
+0x80000000 > unused
 */
 
 #define LEDNONE 0x00
@@ -150,8 +175,23 @@ software mapping (after calling remapLeds()):
 #define AllCurrentLEDs (LED5A | LED3A | LED2A | LED1A)
 #define AllPowerLEDs (AllVoltageLEDs | AllCurrentLEDs | LEDPPS)
 
-//TODO Data,other, status led pins
 
+#define LEDGND     0x100
+#define LEDVBUS    0x200
+#define LEDDN  0x400
+#define LEDDP   0x800
+
+#define LEDSSTXP1  0x01000
+#define LEDSSTXN1  0x02000
+#define LEDSSRXP1  0x04000
+#define LEDSSRXN1  0x08000
+#define LEDSSTXP2  0x10000
+#define LEDSSTXN2  0x20000
+#define LEDSSRXP2  0x40000
+#define LEDSSRXN2  0x80000
+
+#define LEDCC1     0x00100000
+#define LEDCC2     0x00200000
 #define LEDSBU1    0x00400000
 #define LEDSBU2    0x00800000
 
@@ -202,9 +242,9 @@ void setup() {
   Wire.begin();
   Serial.begin(115200);
   scanLeds(50); //test all LEDs and give AP33772 time to initialize
+  usbpd.begin();
   displayVersionAndHash();
   delay(1000);
-  usbpd.begin();
   usbpd.printPDO();
   //scanLeds(150);
   ledState = ledState | scanVoltages();
@@ -251,17 +291,7 @@ bool checkShieldConnection(){
   return true;
 }
 
-/*LED
-copy for short-term reference
-software mapping:
-0x000000FF > power (voltages and PPS, 3A, 5A)
-0x00000F00 > usb 2
-0x000FF000 > usb 3
-0x00F00000 > other
-0x1F000000 > status
-0x60000000 > power (1A, 2A)
-
-*/
+//show the version currently installed on the LEDs
 void displayVersionAndHash(){
   long versionLedSequence = 0;
   versionLedSequence = 0;
