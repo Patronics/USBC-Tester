@@ -5,9 +5,17 @@
 #include <AP33772.h>
 
 
+#define VERSION_MAJOR 0
+#define VERSION_MINOR 1
+#define VERSION_PATCH 2
+
+//generate a pseudo-random unique hash from semver to display installed software version on leds
+#define VERSION_HASH ((VERSION_MAJOR * 5823 + (VERSION_MINOR)%4096)*1409%4096+VERSION_PATCH%4096)
+
+
+
 //if U1 and U2 are unpopulated, green-wire U1 pin 14 to U2 pin 9 and define USB_SHIFT_REG_BYPASS
 //#define USB_SHIFT_REG_BYPASS
-
 
 
 /*
@@ -194,6 +202,8 @@ void setup() {
   Wire.begin();
   Serial.begin(115200);
   scanLeds(50); //test all LEDs and give AP33772 time to initialize
+  displayVersionAndHash();
+  delay(1000);
   usbpd.begin();
   usbpd.printPDO();
   //scanLeds(150);
@@ -239,6 +249,30 @@ bool checkShieldConnection(){
 
   ledState = ledState | LEDSHIELD;
   return true;
+}
+
+/*LED
+copy for short-term reference
+software mapping:
+0x000000FF > power (voltages and PPS, 3A, 5A)
+0x00000F00 > usb 2
+0x000FF000 > usb 3
+0x00F00000 > other
+0x1F000000 > status
+0x60000000 > power (1A, 2A)
+
+*/
+void displayVersionAndHash(){
+  long versionLedSequence = 0;
+  versionLedSequence = 0;
+  versionLedSequence = versionLedSequence | VERSION_MINOR%16 * 0x100; //set usb2 leds to minor version
+  versionLedSequence = versionLedSequence | VERSION_PATCH%32 * 0x1000000;  //set status leds to patch version
+  //set current leds for major version
+  versionLedSequence = versionLedSequence | VERSION_MAJOR%32/16 * LEDPPS;
+  versionLedSequence = versionLedSequence | VERSION_MAJOR%16/4 * LED1A;
+  versionLedSequence = versionLedSequence | VERSION_MAJOR%4 * LED3A;
+  versionLedSequence = versionLedSequence | VERSION_HASH * 0x1000;    //set USB3 and other lights to version hash
+  sendBits(versionLedSequence, 0, true, false);
 }
 
 //check continuity of a specified pin
