@@ -114,9 +114,9 @@ ERRATABOARD = 5: Fully functional Rev 1.0 board
 
 ////USB C testing pins - Shift register outputs
 
-#define USBoutVBUS   0x080000
+#define USBoutVBUS   0x100000
 //use USBoutGND with caution, as it's tied to the USBoutSHIELD pin by most cables
-#define USBoutGND    0x100000
+#define USBoutGND    0x080000
 #define USBoutDP1    0x000800
 #define USBoutDP2    0x000008
 #define USBoutDN1    0x000400
@@ -255,12 +255,10 @@ void loop() {
   //sendBits(ledState,0,true,false);
   // put your main code here, to run repeatedly:
   ledState = ledState & AllPowerLEDs;  //persist power state, rescan other inputs
-  //if(checkShieldConnection()){
-    checkAllPins();
-    //check other pins only when shield is connected
-  //} else {
-  //  ledState = ledState | LEDABSENT;
-  //}
+  if(!checkAllPins()){
+    ledState = ledState | LEDABSENT;
+  }
+
   #ifdef BRIGHTLEDDIMFACTOR //only run this logic if dimming enabled
   brightLedPulseCounter++;
   if (brightLedPulseCounter > BRIGHTLEDDIMFACTOR){
@@ -288,30 +286,33 @@ void displayVersionAndHash(){
   sendBits(versionLedSequence, 0, true, false);
 }
 
-void checkAllPins(){
+//check all pins, update LEDs, and return true if any pins are found connected
+bool checkAllPins(){
+  bool cf = false;   //Connection Found flag
+  cf = cf | checkPinConnectionFast(USBoutVBUS, USBinVBUS, LEDVBUS);
+  cf = cf | checkPinConnectionFast(USBoutGND|USBoutSHIELD, USBinGND, LEDGND);
+  cf = cf | checkPinConnectionFast(USBoutGND|USBoutSHIELD, USBinSHIELD, LEDSHIELD);
+  cf = cf | checkPinConnectionFast(USBoutDP1|USBoutDP2, USBinDP, LEDDP);
+  cf = cf | checkPinConnectionFast(USBoutDN1|USBoutDN2, USBinDN, LEDDN);
 
-  //checkPinConnectionFastWithUSBEnablePinSetAs(USBoutVBUS, USBinVBUS, LEDVBUS,false); TODO Debug this one (is led enable active?)
-  //TODO why do these two go dark when fully connected?
-  //checkPinConnectionFast(USBoutGND|USBoutSHIELD, USBinGND, LEDGND);
-  //checkPinConnectionFast(USBoutGND|USBoutSHIELD, USBinSHIELD, LEDSHIELD);
-  checkPinConnectionFast(USBoutDP1|USBoutDP2, USBinDP, LEDDP);
-  checkPinConnectionFast(USBoutDN1|USBoutDN2, USBinDN, LEDDN);
-
-  checkPinConnectionFast(USBoutDP1, USBinDP, LEDFLIPPED);
+  cf = cf | checkPinConnectionFast(USBoutDP1, USBinDP, LEDFLIPPED);
   
-  checkPinConnectionFast(USBoutSSTXP1|USBoutSSTXP2, USBinSSRXP1, LEDSSRXP1);
-  checkPinConnectionFast(USBoutSSTXN1|USBoutSSTXN2, USBinSSRXN1, LEDSSRXN1);
-  checkPinConnectionFast(USBoutSSRXP1|USBoutSSRXP2, USBinSSTXP1, LEDSSTXP1);
-  checkPinConnectionFast(USBoutSSRXN1|USBoutSSRXN2, USBinSSTXN1, LEDSSTXN1);
-  checkPinConnectionFast(USBoutSSTXP2|USBoutSSTXP1, USBinSSRXP2, LEDSSRXP2);
-  checkPinConnectionFast(USBoutSSTXN2|USBoutSSTXN1, USBinSSRXN2, LEDSSRXN2);
-  checkPinConnectionFast(USBoutSSRXP2|USBoutSSRXP1, USBinSSTXP2, LEDSSTXP2);
-  checkPinConnectionFast(USBoutSSRXN2|USBoutSSRXN1, USBinSSTXN2, LEDSSTXN2);
-  //checkPinConnectionFast(USBoutSBU1, USBinSBU1, LEDSBU1);
-  //checkPinConnectionFast(USBoutSBU2, USBinSBU2, LEDSBU2);
-  checkPinConnectionFast(USBoutSBU1|USBoutSBU2, USBinSBU1, LEDSBU1);
-  checkPinConnectionFast(USBoutSBU2|USBoutSBU1, USBinSBU2, LEDSBU2);
-  //checkShieldConnection();
+  cf = cf | checkPinConnectionFast(USBoutSSTXP1|USBoutSSTXP2, USBinSSRXP1, LEDSSRXP1);
+  cf = cf | checkPinConnectionFast(USBoutSSTXN1|USBoutSSTXN2, USBinSSRXN1, LEDSSRXN1);
+  cf = cf | checkPinConnectionFast(USBoutSSRXP1|USBoutSSRXP2, USBinSSTXP1, LEDSSTXP1);
+  cf = cf | checkPinConnectionFast(USBoutSSRXN1|USBoutSSRXN2, USBinSSTXN1, LEDSSTXN1);
+  cf = cf | checkPinConnectionFast(USBoutSSTXP2|USBoutSSTXP1, USBinSSRXP2, LEDSSRXP2);
+  cf = cf | checkPinConnectionFast(USBoutSSTXN2|USBoutSSTXN1, USBinSSRXN2, LEDSSRXN2);
+  cf = cf | checkPinConnectionFast(USBoutSSRXP2|USBoutSSRXP1, USBinSSTXP2, LEDSSTXP2);
+  cf = cf | checkPinConnectionFast(USBoutSSRXN2|USBoutSSRXN1, USBinSSTXN2, LEDSSTXN2);
+
+//CC1/CC2 handling more compelex than this, not passed through
+//  cf = cf | checkPinConnectionFast(USBoutCC1|USBoutCC2, USBinCC1, LEDCC1);
+//  cf = cf | checkPinConnectionFast(USBoutCC1|USBoutCC2, USBinCC2, LEDCC2);
+
+  cf = cf | checkPinConnectionFast(USBoutSBU1|USBoutSBU2, USBinSBU1, LEDSBU1);
+  cf = cf | checkPinConnectionFast(USBoutSBU2|USBoutSBU1, USBinSBU2, LEDSBU2);
+  return cf;
 
 }
 
