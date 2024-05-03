@@ -7,7 +7,7 @@
 
 #define VERSION_MAJOR 0
 #define VERSION_MINOR 3
-#define VERSION_PATCH 2
+#define VERSION_PATCH 3
 
 //generate a pseudo-random unique hash from semver to display installed software version on leds
 #define VERSION_HASH ((VERSION_MAJOR * 5823 + (VERSION_MINOR)%4096)*1409%4096+VERSION_PATCH%4096)
@@ -243,7 +243,7 @@ void setup() {
   scanLeds(50); //test all LEDs and give AP33772 time to initialize
   usbpd.begin();
   displayVersionAndHash();
-  delay(1000);
+  delay(500);
   usbpd.printPDO();
   //scanLeds(150);
   ledState = ledState | scanVoltages();
@@ -299,14 +299,14 @@ void checkAllPins(){
 
   checkPinConnectionFast(USBoutDP1, USBinDP, LEDFLIPPED);
   
-  checkPinConnectionFast(USBoutSSTXP1, USBinSSTXP1, LEDSSTXP1);
-  checkPinConnectionFast(USBoutSSTXN1, USBinSSTXN1, LEDSSTXN1);
-  checkPinConnectionFast(USBoutSSRXP1, USBinSSRXP1, LEDSSRXP1);
-  checkPinConnectionFast(USBoutSSRXN1, USBinSSRXN1, LEDSSRXN1);
-  checkPinConnectionFast(USBoutSSTXP2, USBinSSTXP2, LEDSSTXP2);
-  checkPinConnectionFast(USBoutSSTXN2, USBinSSTXN2, LEDSSTXN2);
-  checkPinConnectionFast(USBoutSSRXP2, USBinSSRXP2, LEDSSRXP2);
-  checkPinConnectionFast(USBoutSSRXN2, USBinSSRXN2, LEDSSRXN2);
+  checkPinConnectionFast(USBoutSSTXP1|USBoutSSTXP2, USBinSSRXP1, LEDSSRXP1);
+  checkPinConnectionFast(USBoutSSTXN1|USBoutSSTXN2, USBinSSRXN1, LEDSSRXN1);
+  checkPinConnectionFast(USBoutSSRXP1|USBoutSSRXP2, USBinSSTXP1, LEDSSTXP1);
+  checkPinConnectionFast(USBoutSSRXN1|USBoutSSRXN2, USBinSSTXN1, LEDSSTXN1);
+  checkPinConnectionFast(USBoutSSTXP2|USBoutSSTXP1, USBinSSRXP2, LEDSSRXP2);
+  checkPinConnectionFast(USBoutSSTXN2|USBoutSSTXN1, USBinSSRXN2, LEDSSRXN2);
+  checkPinConnectionFast(USBoutSSRXP2|USBoutSSRXP1, USBinSSTXP2, LEDSSTXP2);
+  checkPinConnectionFast(USBoutSSRXN2|USBoutSSRXN1, USBinSSTXN2, LEDSSTXN2);
   //checkPinConnectionFast(USBoutSBU1, USBinSBU1, LEDSBU1);
   //checkPinConnectionFast(USBoutSBU2, USBinSBU2, LEDSBU2);
   checkPinConnectionFast(USBoutSBU1|USBoutSBU2, USBinSBU1, LEDSBU1);
