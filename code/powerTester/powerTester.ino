@@ -7,7 +7,7 @@
 
 #define VERSION_MAJOR 0
 #define VERSION_MINOR 2
-#define VERSION_PATCH 0
+#define VERSION_PATCH 1
 
 //generate a pseudo-random unique hash from semver to display installed software version on leds
 #define VERSION_HASH ((VERSION_MAJOR * 5823 + (VERSION_MINOR)%4096)*1409%4096+VERSION_PATCH%4096)
@@ -256,13 +256,14 @@ void loop() {
   //sendBits(ledState,0,true,false);
   // put your main code here, to run repeatedly:
   ledState = ledState & AllPowerLEDs;  //persist power state, rescan other inputs
-  if(checkShieldConnection()){
+  //if(checkShieldConnection()){
+    checkPinConnectionFast(USBoutDP1|USBoutDP2, USBinDP, LEDDP);
     checkPinConnectionFast(USBoutSBU1, USBinSBU1, LEDSBU1);
     checkPinConnectionFast(USBoutSBU2, USBinSBU2, LEDSBU2);
     //check other pins only when shield is connected
-  } else {
-    ledState = ledState | LEDABSENT;
-  }
+  //} else {
+  //  ledState = ledState | LEDABSENT;
+  //}
   #ifdef BRIGHTLEDDIMFACTOR //only run this logic if dimming enabled
   brightLedPulseCounter++;
   if (brightLedPulseCounter > BRIGHTLEDDIMFACTOR){
