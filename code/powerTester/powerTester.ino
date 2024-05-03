@@ -287,8 +287,9 @@ unsigned int getCurrentLEDsForVoltage(int targetVoltage){
   if (targetVoltage == -1){ //get overall MaxCurrent
     maxCurrent = usbpd.getMaxCurrent();
   } else {
-    usbpd.getMaxCurrentForVoltage(targetVoltage);
+    maxCurrent = usbpd.getMaxCurrentForVoltage(targetVoltage);
   }
+  Serial.println("got current "+String(maxCurrent)+" for voltage "+String(targetVoltage));
   if (maxCurrent >= 950){
     currentLEDs = currentLEDs | LED1A;
   }
@@ -348,7 +349,7 @@ unsigned long scanVoltages(){
 
   usbpd.setVoltage(5000); //restore default 5v voltage
   voltageLEDs = (voltageLEDs & ~AllCurrentLEDs) | getCurrentLEDsForVoltage(-1);
-
+  delay(500);
   return voltageLEDs;
 }
 
