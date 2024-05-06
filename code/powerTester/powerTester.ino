@@ -135,9 +135,11 @@ ERRATABOARD = 5: Fully functional Rev 1.0 board
 #define USBoutSBU1   0x000200
 #define USBoutSBU2   0x020000
 
+//this group pulled up to VCC by 36k by default when USB outputs disabled
 #define USBoutCC1    0x001000
 #define USBoutCC2    0x000010
 
+//this group tied to the LED output enable line, NOT USB output enable
 #define USBoutSHIELD 0x000004
 #define USBpullupCC1 0x000002
 #define USBpullupCC2 0x000001
