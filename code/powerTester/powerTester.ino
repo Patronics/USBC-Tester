@@ -249,6 +249,8 @@ void setup() {
   usbpd.printPDO();
   //scanLeds(150);
   ledState = ledState | scanVoltages();
+    //sendBits(LEDVBUS, USBoutVBUS, true, true);
+
 }
 
 void loop() {
@@ -260,6 +262,8 @@ void loop() {
   if(!checkAllPins()){
     ledState = ledState | LEDABSENT;
   }
+
+  //checkPinConnectionFast(USBoutVBUS, USBinVBUS, LEDVBUS);
 
   #ifdef BRIGHTLEDDIMFACTOR //only run this logic if dimming enabled
   brightLedPulseCounter++;
@@ -326,14 +330,16 @@ bool checkPinConnectionFast(unsigned long outPin,int inPin,unsigned long ledPin)
 //helper function for checkPinConnectionFast, use with usbEnable true except when testing shield pin
 bool checkPinConnectionFastWithUSBEnablePinSetAs(unsigned long outPin,int inPin,unsigned long ledPin, bool usbEnable){
   sendBits(ledState, 0, true, usbEnable); //test low first, and flash the led corresponding to pin under test
-  delayMicroseconds(20);   //give time for bits to settle and LED to flash
+  delayMicroseconds(55);   //give time for bits to settle and LED to flash (most signals take 20us, kendrick's cable takes 50us)
+  //delay(10);
   if (digitalRead(inPin)){
     Serial.println("test outPin "+String(outPin)+" connection to inPin "+String(inPin)+" failed, expected LOW, got HIGH");
     sendBits(ledState, 0, true, false); //restore LEDs and disable output
     return false;
   }
   sendBits(ledState, outPin, true, usbEnable); //test low first, and flash the led corresponding to pin under test
-  delayMicroseconds(20);   //give time for bits to settle and LED to flash
+  delayMicroseconds(55);   //give time for bits to settle and LED to flash (most signals take 20us, kendrick's cable takes 50us)
+  //delay(10);
   if (!digitalRead(inPin)){
     Serial.println("test outPin "+String(outPin)+"connection to inPin"+String(inPin)+"failed, expected HIGH, got LOW");
     sendBits(ledState, 0, true, false); //restore LEDs and disable output
