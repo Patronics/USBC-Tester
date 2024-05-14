@@ -8268,6 +8268,69 @@
 		)
 		(uuid "ff87a079-4b5a-407b-9d93-0af8d6f88138")
 	)
+	(text "Author:"
+		(exclude_from_sim no)
+		(at 257.048 189.738 0)
+		(effects
+			(font
+				(size 1.5 1.5)
+				(color 132 0 0 1)
+			)
+		)
+		(uuid "0734f06e-bf37-4a7f-8768-5d8990d94a3f")
+	)
+	(text "Spring 2024"
+		(exclude_from_sim no)
+		(at 213.36 193.294 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "3103e9bf-4e30-4d84-8ef8-ee60be4a18da")
+	)
+	(text "Patrick Leiser"
+		(exclude_from_sim no)
+		(at 273.05 189.738 0)
+		(effects
+			(font
+				(size 2 2)
+			)
+		)
+		(uuid "32c06427-e364-4816-ba4b-ff614017b9ce")
+	)
+	(text "1.1"
+		(exclude_from_sim no)
+		(at 270.002 193.294 0)
+		(effects
+			(font
+				(size 1.5 1.5)
+			)
+		)
+		(uuid "9fc3fc94-3123-4c64-bf06-2d6173346263")
+	)
+	(text "1  1"
+		(exclude_from_sim no)
+		(at 187.198 183.388 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "aa30b985-fd88-4f10-8ba2-63d24160e70f")
+	)
+	(text "USB C Tester"
+		(exclude_from_sim no)
+		(at 196.596 189.738 0)
+		(effects
+			(font
+				(size 2 2)
+				(thickness 0.4)
+				(bold yes)
+			)
+		)
+		(uuid "e7f56448-1114-47e6-9397-0699c604a974")
+	)
 	(global_label "RCLK"
 		(shape input)
 		(at 238.76 142.24 180)
@@ -8989,7 +9052,7 @@
 		(fields_autoplaced yes)
 		(uuid "055cbf99-fb17-4655-b6ee-7ecc891cdbdd")
 		(property "Reference" "R34"
-			(at 174.498 41.9679 0)
+			(at 174.498 41.9678 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8997,7 +9060,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "12k"
+		(property "Value" "18k"
 			(at 174.498 44.3921 0)
 			(effects
 				(font
